@@ -64,8 +64,8 @@
         .item-name-group { margin-top: 15px; }
         .item-name-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--background-color); color: var(--text-color); box-sizing: border-box; }
         details.settings-panel { padding: 0; }
-        details summary { padding: 15px; cursor: pointer; font-weight: bold; font-size: 1.2em; list-style: none; } /* list-style none to hide arrow in some browsers */
-        details summary::-webkit-details-marker { display: none; } /* Hide arrow in Chrome/Safari */
+        details summary { padding: 15px; cursor: pointer; font-weight: bold; font-size: 1.2em; list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
         .settings-content { padding: 0 15px 15px; }
         #project-summary-container { border-top: 2px solid var(--secondary-color); margin-top: 40px; padding-top: 25px; }
         #project-summary ul { list-style: none; padding: 0; }
@@ -73,7 +73,8 @@
         #project-summary li:hover { background-color: var(--info-bg); }
         .project-item-details { flex-grow: 1; margin-right: 15px; }
         .project-item-name { font-weight: bold; font-size: 1.1em; }
-        .project-item-yardage { font-size: 1.1em; font-weight: bold; color: var(--primary-color); text-align: right; }
+        .project-item-cost { font-size: 1.1em; font-weight: bold; color: var(--primary-color); text-align: right; }
+        .project-item-cost .volume { font-size: 0.8em; font-weight: normal; color: var(--icon-color); }
         .remove-item-btn { background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-left: 15px;}
         .project-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
@@ -81,29 +82,14 @@
         .modal-close { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--icon-color); }
         #instructions-modal ul { list-style: disc; padding-left: 20px; line-height: 1.6; }
         
-        /* --- MOBILE OPTIMIZATIONS --- */
         @media (max-width: 600px) {
             body { padding: 0; }
             .main-container { margin: 0; border-radius: 0; }
             .app-body { padding: 15px; }
             #running-totals-bar { top: 0; border-radius: 0; }
-            
-            /* Increase font size on inputs to prevent mobile browser zoom */
-            input[type="text"], input[type="number"], textarea, select {
-                font-size: 16px !important;
-            }
-            
-            /* Make icon grid more compact on small screens */
-            .navigation-grid {
-                grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-                gap: 8px;
-            }
-
-            /* Stack the 2-column layout (for Stairs) vertically */
-            .form-row-2-col {
-                flex-direction: column;
-                gap: 0;
-            }
+            input[type="text"], input[type="number"], textarea, select { font-size: 16px !important; }
+            .navigation-grid { grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 8px; }
+            .form-row-2-col { flex-direction: column; gap: 0; }
         }
 
         @media print {
@@ -331,8 +317,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.latestCalcResults[id]) return;
         const nameInput = view.querySelector('.item-name-input');
         const itemName = nameInput && nameInput.value.trim() !== '' ? nameInput.value.trim() : state.latestCalcResults[id].name;
+        const itemVolume = state.latestCalcResults[id].volume;
+        const itemCost = (itemVolume / CUBIC_FEET_IN_YARD) * state.settings.costYard;
         
-        state.projectItems.push({ id: Date.now(), ...state.latestCalcResults[id], name: itemName });
+        state.projectItems.push({ 
+            id: Date.now(), 
+            name: itemName, 
+            volume: itemVolume, 
+            cost: itemCost
+        });
         delete state.latestCalcResults[id];
         
         view.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
@@ -344,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleSettingsChange(e) {
         const id = e.target.id;
         const value = parseFloat(e.target.value);
-        if (isNaN(value)) return;
+        if (isNaN(value) && value !== 0) return;
 
         if (id === 'waste-factor') state.settings.waste = value;
         else if (id === 'cost-yard') state.settings.costYard = value;
@@ -362,10 +355,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalVolume = state.projectItems.reduce((acc, item) => acc + item.volume, 0);
             state.projectItems.forEach(item => {
                 const itemYards = (item.volume / CUBIC_FEET_IN_YARD).toFixed(2);
-                content += `<li><div class="project-item-details"><span class="project-item-name">${item.name}</span></div><div class="project-item-yardage">${itemYards} yd³</div><button class="remove-item-btn no-print" data-id="${item.id}">×</button></li>`;
+                content += `<li>
+                                <div class="project-item-details">
+                                    <span class="project-item-name">${item.name}</span>
+                                </div>
+                                <div class="project-item-cost">
+                                    $${item.cost.toFixed(2)}
+                                    <div class="volume">${itemYards} yd³</div>
+                                </div>
+                                <button class="remove-item-btn no-print" data-id="${item.id}">×</button>
+                            </li>`;
             });
             content += `</ul>${createResultsHTML(totalVolume, 'grand_total')}`;
-            content += `<div class="project-actions no-print"><button id="copy-project-btn" class="action-button" style="background-color: var(--warning-color); color: #333;"></button><button id="print-project-btn" class="action-button"></button><button id="clear-project-btn" class="action-button" style="background-color: var(--danger-color);"></button></div></div>`;
+            // FIXED THIS LINE: Added data-translate-key attributes
+            content += `<div class="project-actions no-print">
+                            <button id="copy-project-btn" class="action-button" style="background-color: var(--warning-color); color: #333;" data-translate-key="copy_button"></button>
+                            <button id="print-project-btn" class="action-button" data-translate-key="print_button"></button>
+                            <button id="clear-project-btn" class="action-button" style="background-color: var(--danger-color);" data-translate-key="clear_button"></button>
+                        </div></div>`;
         }
         DOM.projectSummaryContainer.innerHTML = content;
         
@@ -409,8 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const t = (key) => (translations[state.lang] || translations.en)[key];
         let text = `${t('project_title')}\n========================\n\n`;
         state.projectItems.forEach(item => {
-            text += `${t('item_name')}: ${item.name}\n`;
-            text += ` - ${(item.volume / CUBIC_FEET_IN_YARD).toFixed(2)} yd³\n\n`;
+            text += `ITEM: ${item.name}\n`;
+            text += ` - ${(item.volume / CUBIC_FEET_IN_YARD).toFixed(2)} yd³  (${t('cost')}: $${item.cost.toFixed(2)})\n\n`;
         });
         const totalVolume = state.projectItems.reduce((acc, item) => acc + item.volume, 0);
         const totalYards = totalVolume / CUBIC_FEET_IN_YARD;
@@ -420,12 +427,13 @@ document.addEventListener('DOMContentLoaded', () => {
         text += `${t('cubic_yards')}: ${totalYards.toFixed(2)} (${t('cost')}: $${(totalYards * state.settings.costYard).toFixed(2)})\n`;
         text += `${t('bags80')}: ${totalBags80} (${t('cost')}: $${(totalBags80 * state.settings.cost80lb).toFixed(2)})\n`;
         text += `${t('bags60')}: ${totalBags60} (${t('cost')}: $${(totalBags60 * state.settings.cost60lb).toFixed(2)})\n`;
-        text += `(${t('waste_factor')}: ${state.settings.waste}%)\n`;
+        text += `(Includes a ${state.settings.waste}% ${t('waste_factor')})\n`;
 
         navigator.clipboard.writeText(text).then(() => {
-            const originalCopyText = t('copy_button');
+            // FIXED THIS LOGIC: Store original text before changing it.
+            const originalText = btn.textContent;
             btn.textContent = t('copied_button');
-            setTimeout(() => { btn.textContent = originalCopyText; }, 2000);
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
         });
     }
 
