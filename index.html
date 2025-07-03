@@ -56,6 +56,14 @@
         .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
         .modal-close { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; }
         #instructions-modal ul { list-style: disc; padding-left: 20px; }
+
+        /* --- MOBILE PADDING ADJUSTMENT --- */
+        @media (max-width: 600px) {
+            body { padding: 0; }
+            .main-container { border-radius: 0; }
+            .app-body { padding: 15px; }
+            #running-totals-bar { top: 0; border-radius: 0; }
+        }
     </style>
 </head>
 <body>
@@ -97,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectSummaryContainer = document.getElementById('project-summary');
     const runningTotalsBar = document.getElementById('running-totals-bar');
 
-    // --- TRANSLATIONS ---
+    // --- TRANSLATIONS (with updated slab/footing key) ---
     const translations = {
         en: { ad_desc: "Direct Trucking & Construction Jobs.", app_title: "Concrete Calculator", clear_button: "Clear Project", slab_footing_title: "Slab / Footing", column_title: "Column / Hole (Round)", circ_slab_title: "Circular Slab", curb_title: "Curb", curb_gutter_title: "Curb & Gutter", stairs_title: "Stairs", project_title: "Project Totals", instructions_title: "Instructions", use_inches_toggle: "Use Inches for Primary Fields", calculate_button: "Calculate", total_needed: "Piece Total", grand_total: "Grand Total", cubic_yards: "Cubic Yards", bags80: "80lb Bags", bags60: "60lb Bags", add_to_project: "Add to Project", running_total_text: (n) => `Project: ${n} Pieces`, length: "Length", width: "Width", thickness: "Thickness", diameter: "Diameter", depth_height: "Depth / Height", curb_height: "Curb Height", curb_width: "Curb Width", gutter_width: "Gutter Width", gutter_thick: "Gutter Thick", num_steps: "Number of Steps", tread_depth: "Tread Depth", riser_height: "Riser Height", stair_width: "Stair Width", waist_thick: "Waist Thick", feet: "ft", inches: "in", inst_1: "1. Choose a calculator from the buttons for your project type (e.g., Slab/Footing, Column).", inst_2: "2. The active calculator is highlighted in blue. Enter your dimensions into the fields.", inst_3: "3. Use the 'Use Inches' toggle if you prefer to enter primary dimensions in inches instead of feet.", inst_4: "4. Press 'Calculate' to see the results for that single piece.", inst_5: "5. To calculate multiple pieces, press 'Add to Project'. This saves the result and instantly resets the form for the next entry.", inst_6: "6. The 'Project Totals' section at the bottom of the page updates automatically with a detailed list of all pieces and their individual yardage.", inst_7: "7. Change the language anytime using the buttons at the top.", project_empty: "Your project is empty. Add items from a calculator to see them here." },
         es: { /* Spanish translations */ },
@@ -112,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'stairs': { titleKey: 'stairs_title', needsToggle: true, inputs: [ {name: 'num_steps', unit: '', switchable: false}, {name: 'tread_depth', unit: 'inches', switchable: false}, {name: 'riser_height', unit: 'inches', switchable: false}, {name: 'stair_width', unit: 'feet', switchable: true}, {name: 'waist_thick', unit: 'inches', switchable: false} ], calculate: v => { const n=getRawVal(v,'num_steps'), t=getRawVal(v,'tread_depth')/12, r=getRawVal(v,'riser_height')/12, w=getVal(v,'stair_width'), a=getRawVal(v,'waist_thick')/12, s=n*(.5*t*r*w), l=Math.sqrt(Math.pow(n*t,2)+Math.pow(n*r,2)); return s+l*w*a; }, getDesc: v => `${getRawVal(v,'num_steps')} steps, ${getRawVal(v,'stair_width')}${getUnit(v,'stair_width')} wide`},
     };
     
-    // --- DYNAMIC HTML GENERATION & INITIALIZATION ---
     function initializeApp() {
         Object.keys(calculators).forEach(id => navGrid.innerHTML += `<button class="nav-button" data-view-id="${id}" data-translate-key="${calculators[id].titleKey}"></button>`);
         navGrid.innerHTML += `<button class="nav-button" id="instructions-nav-btn" data-translate-key="instructions_title"></button>`;
@@ -137,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProjectView(); showView('slab-footing'); setLanguage('en');
     }
 
-    // --- EVENT HANDLERS & LOGIC ---
     function handleNavClick(e) { showView(e.currentTarget.dataset.viewId); }
     
     function handleCalculate(view, config, id) {
@@ -162,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         button.style.display = 'none';
     }
 
-    // --- RENDER & UPDATE FUNCTIONS ---
     function showView(viewId) {
         document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
         const view = document.getElementById(viewId);
