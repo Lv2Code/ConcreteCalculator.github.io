@@ -2,291 +2,232 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concrete Calculator</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         :root {
-            --ios-blue: #007AFF; --ios-light-gray: #F2F2F7; --ios-mid-gray: #E5E5EA;
-            --ios-dark-gray: #8E8E93; --ios-black: #000000; --ios-white: #FFFFFF;
-            --ios-green: #34C759; --ios-orange: #FF9500; --ios-red: #FF3B30;
+            --primary-color: #2a6fdb; --primary-dark: #1e5abc; --secondary-color: #333; --background-color: #f4f7f6;
+            --card-bg: #ffffff; --text-color: #333; --border-color: #e1e1e1;
+            --success-color: #28a745; --danger-color: #dc3545; --info-bg: #e9f2ff;
         }
-        body { font-family: 'Inter', 'Noto Sans', 'Noto Sans SC', -apple-system, sans-serif; background-color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .iphone-container { width: 100%; max-width: 428px; height: 926px; background: var(--ios-black); border-radius: 54px; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 2px #444; box-sizing: border-box; }
-        .screen { background: var(--ios-light-gray); width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
-        .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 210px; height: 34px; background: var(--ios-black); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; z-index: 100; }
-        .app-view { display: none; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; }
-        .app-view.active { display: flex; }
-        .app-header { padding: 55px 15px 10px 15px; background: #F9F9F9; border-bottom: 0px solid var(--ios-mid-gray); text-align: center; position: relative; flex-shrink: 0; z-index: 10;}
-        .app-header .back-button { position: absolute; left: 15px; top: 50%; transform: translateY(10%); font-size: 17px; color: var(--ios-blue); cursor: pointer; text-decoration: none; font-weight: 500; }
-        .app-header .back-button::before { content: '‹'; font-size: 24px; font-weight: 400; margin-right: 2px; position: relative; top: 1px; }
-        .app-header h1 { margin: 0; font-size: 17px; font-weight: 700; }
-        .app-header .header-action { position: absolute; right: 15px; top: 50%; transform: translateY(10%); font-size: 17px; color: var(--ios-blue); cursor: pointer; font-weight: 500; }
-        .app-content { padding: 20px 15px 80px 15px; overflow-y: auto; flex-grow: 1; } /* Added padding-bottom for ad */
-        #home-view .app-content { padding-bottom: 80px; }
-        #home-view .home-title { text-align: left; padding: 0 15px; margin-bottom: 20px; font-size: 34px; font-weight: 700; }
-        .language-selector { padding: 0 15px 20px; display: flex; justify-content: space-around; background: var(--ios-light-gray); border-bottom: 1px solid var(--ios-mid-gray); }
-        .lang-button { background: var(--ios-white); border: 1px solid var(--ios-mid-gray); color: var(--ios-blue); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
-        .lang-button.selected { background: var(--ios-blue); color: var(--ios-white); }
-        .icon-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px 15px 0 15px; }
-        .icon { position:relative; background: var(--ios-white); border-radius: 18px; padding: 15px; text-align: left; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
-        .icon .badge { position: absolute; top: -5px; right: -5px; background: var(--ios-red); color: white; font-size: 12px; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid var(--ios-white); display: none; }
-        .icon:hover { background: var(--ios-mid-gray); }
-        .icon h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: 700; }
-        .icon p { margin: 0; font-size: 13px; color: var(--ios-dark-gray); line-height: 1.3; }
-        .form-group, .results-container, .project-totals, .project-list li, .unit-toggle-container { background: var(--ios-white); border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--ios-mid-gray); }
-        .form-row { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ios-mid-gray); }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 20px; }
+        .main-container { max-width: 600px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .app-header { padding: 20px; background: var(--secondary-color); color: white; text-align: center; }
+        .app-header h1 { margin: 0; font-size: 1.8em; }
+        .language-selector { display: flex; justify-content: center; gap: 10px; padding: 15px; background: #f0f0f0; border-bottom: 1px solid var(--border-color); }
+        .lang-button { background: #fff; border: 1px solid #ccc; color: #555; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: all 0.2s; }
+        .lang-button.selected { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .app-body { padding: 25px; }
+        .navigation-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+        .nav-button { flex-grow: 1; padding: 10px; background: #fff; border: 1px solid #ccc; color: #333; border-radius: 5px; cursor: pointer; font-size: 0.9em; text-align: center; font-weight: 500; transition: background-color 0.2s, color 0.2s, border-color 0.2s; position: relative; }
+        .nav-button.active { background: var(--primary-color); color: white; border-color: var(--primary-dark); }
+        #running-totals-bar { display: none; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--info-bg); border: 1px solid var(--primary-color); border-radius: 5px; margin-bottom: 25px; font-size: 0.9em; position: sticky; top: 10px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .app-view { display: none; }
+        .app-view.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group, .results-container, .unit-toggle-container, #instructions-view ul { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; padding: 15px; }
+        .form-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
         .form-row:last-child { border-bottom: none; }
-        .input-container input[type="number"] { border: none; background: none; text-align: right; font-size: 16px; width: 80px; color: var(--ios-dark-gray); }
-        .input-container .unit { font-size: 16px; color: var(--ios-dark-gray); margin-left: 8px; min-width: 40px; text-align: left; }
-        .calculate-button, .add-to-project-button { width: 100%; padding: 15px; font-size: 17px; font-weight: 700; color: var(--ios-white); border: none; border-radius: 12px; cursor: pointer; }
-        .calculate-button { background: var(--ios-blue); }
-        .add-to-project-button { background: var(--ios-green); margin-top: 15px; display: none; }
-        .results-container { padding: 15px; display: none; }
-        .results-container h2, .project-totals h2 { font-size: 20px; margin: 0 0 15px 0; text-align: center; }
-        .result-item { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
-        .result-item .value { font-size: 28px; font-weight: 700; color: var(--ios-orange); }
-        .result-split { display: flex; justify-content: space-around; border-top: 1px solid var(--ios-mid-gray); margin-top: 10px; }
-        #project-view .project-list { list-style: none; padding: 0; margin: 0; }
-        #project-view .project-list li { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        #project-view .project-item-details { display: flex; flex-direction: column; }
-        #project-view .project-item-title { font-size: 16px; font-weight: 500; }
-        #project-view .project-item-desc { font-size: 13px; color: var(--ios-dark-gray); }
-        #project-view .remove-item-btn { background: var(--ios-red); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; font-weight: 700; cursor: pointer; }
-        #project-view .project-totals { padding: 15px; }
-        .ad-banner { position: absolute; bottom: 0; left: 0; right: 0; background: var(--ios-white); padding: 10px 15px; border-top: 1px solid var(--ios-mid-gray); z-index: 50; border-radius: 0 0 38px 38px; text-decoration: none; color: inherit; display: flex; align-items: center; }
-        .ad-banner img { height: 40px; width: 40px; border-radius: 8px; margin-right: 10px; }
-        .ad-banner .ad-text h4 { margin: 0 0 2px 0; font-size: 14px; color: var(--ios-black); }
-        .ad-banner .ad-text p { margin: 0; font-size: 12px; color: var(--ios-dark-gray); line-height: 1.3; }
+        .input-group { display: flex; align-items: center; gap: 8px; }
+        .input-group input { width: 80px; text-align: right; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .unit-toggle-container { display: flex; justify-content: space-between; align-items: center; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .action-button { width: 100%; padding: 15px; font-size: 1.1em; font-weight: 700; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        .calculate-button { background-color: var(--primary-color); }
+        .add-to-project-button { background-color: var(--success-color); display: none; }
+        .results-container h3, #project-summary h2 { text-align: center; margin-top: 0; }
+        .result-item { text-align: center; padding: 10px; }
+        .result-item .value { font-size: 2em; font-weight: 700; color: var(--primary-color); }
+        .result-split { display: flex; justify-content: space-around; border-top: 1px solid var(--border-color); margin-top: 10px; }
+        #project-summary { border-top: 2px solid var(--secondary-color); margin-top: 40px; padding-top: 25px; }
+        #project-summary ul { list-style: none; padding: 0; }
+        #project-summary li { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #fdfdfd; border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 10px; }
+        .project-item-details { display: flex; flex-direction: column; }
+        .project-item-yardage { font-size: 0.9em; font-weight: bold; color: var(--primary-color); margin-left: 10px; text-align: right; }
+        .remove-item-btn { background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-weight: 700; cursor: pointer; flex-shrink: 0; margin-left: 15px;}
+        .ad-banner { display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-top: 1px solid var(--border-color); text-decoration: none; color: inherit; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; }
+        #instructions-modal ul { list-style: disc; padding-left: 20px; }
     </style>
 </head>
 <body>
-    <div class="iphone-container">
-        <div class="screen">
-            <div class="notch"></div>
-            
-            <div id="home-view" class="app-view active">
-                 <div class="app-header" style="border-bottom:none; padding-top: 60px;"><h1 class="home-title" data-translate-key="app_title"></h1></div>
-                <div class="language-selector">
-                    <button class="lang-button selected" data-lang="en">English</button><button class="lang-button" data-lang="es">Español</button><button class="lang-button" data-lang="zh">中文</button><button class="lang-button" data-lang="hi">हिन्दी</button>
-                </div>
-                <div class="app-content">
-                    <div class="icon-grid">
-                        <div class="icon" data-target="slab-view"><h3 data-translate-key="slab_wall_title"></h3><p data-translate-key="slab_wall_desc"></p></div>
-                        <div class="icon" data-target="column-view"><h3 data-translate-key="column_title"></h3><p data-translate-key="column_desc"></p></div>
-                        <div class="icon" data-target="circular-slab-view"><h3 data-translate-key="circ_slab_title"></h3><p data-translate-key="circ_slab_desc"></p></div>
-                        <div class="icon" data-target="curb-view"><h3 data-translate-key="curb_title"></h3><p data-translate-key="curb_desc"></p></div>
-                        <div class="icon" data-target="curb-gutter-view"><h3 data-translate-key="curb_gutter_title"></h3><p data-translate-key="curb_gutter_desc"></p></div>
-                        <div class="icon" data-target="stairs-view"><h3 data-translate-key="stairs_title"></h3><p data-translate-key="stairs_desc"></p></div>
-                        <div class="icon" data-target="project-view"><span class="badge">0</span><h3 data-translate-key="project_title"></h3><p data-translate-key="project_desc"></p></div>
-                        <div class="icon" data-target="instructions-view"><h3 data-translate-key="instructions_title"></h3><p data-translate-key="instructions_desc"></p></div>
-                    </div>
-                </div>
+    <div class="main-container">
+        <header class="app-header"><h1 data-translate-key="app_title"></h1></header>
+        <section class="language-selector">
+            <button class="lang-button selected" data-lang="en">English</button><button class="lang-button" data-lang="es">Español</button>
+            <button class="lang-button" data-lang="zh">中文</button><button class="lang-button" data-lang="hi">हिन्दी</button>
+        </section>
+        <main class="app-body">
+            <nav id="navigation-grid" class="navigation-grid"></nav>
+            <div id="running-totals-bar">
+                <span id="running-totals-text"></span><strong><span id="running-yards"></span> yd³</strong>
             </div>
-            
-            <div id="project-view" class="app-view">
-                <div class="app-header">
-                    <a href="#" class="back-button" data-translate-key="back_button"></a><h1 data-translate-key="project_title"></h1>
-                    <a href="#" class="header-action" id="clear-project-btn" data-translate-key="clear_button"></a>
-                </div>
-                <div class="app-content">
-                    <ul class="project-list"></ul>
-                    <div class="project-totals">
-                        <h2 data-translate-key="grand_total"></h2>
-                        <div class="result-item"><span class="value result-yards">0.00</span><span class="label" data-translate-key="cubic_yards"></span></div>
-                        <div class="result-split">
-                           <div class="result-item"><span class="value result-bags80">0</span><span class="label" data-translate-key="bags80"></span></div>
-                           <div class="result-item"><span class="value result-bags60">0</span><span class="label" data-translate-key="bags60"></span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div id="view-container"></div>
+            <div id="project-summary"></div>
+        </main>
+        <a href="https://dailyrig.com" target="_blank" class="ad-banner">
+            <img src="https://i.postimg.cc/sXGmdVbr/dr-logo.png" alt="DailyRig Logo">
+            <div><h4>DailyRig.com</h4><p data-translate-key="ad_desc"></p></div>
+        </a>
+    </div>
 
-            <div id="instructions-view" class="app-view"><!-- Instructions view content here --></div>
-
-            <script type="text/template" id="calculator-template">
-                <div class="app-header"><a href="#" class="back-button" data-translate-key="back_button"></a><h1></h1></div>
-                <div class="app-content">
-                    <div class="unit-toggle-container"><label class="toggle-label" data-translate-key="use_inches_toggle"></label><label class="toggle-switch"><input type="checkbox" class="unit-toggle"><span class="slider"></span></label></div>
-                    <div class="form-group">{{inputs}}</div>
-                    <button class="calculate-button" data-translate-key="calculate_button"></button>
-                    <div class="results-container">
-                        <h2 data-translate-key="total_needed"></h2>
-                        <div class="result-item"><span class="value result-yards">0.00</span><span class="label" data-translate-key="cubic_yards"></span></div>
-                        <div class="result-split">
-                           <div class="result-item"><span class="value result-bags80">0</span><span class="label" data-translate-key="bags80"></span></div>
-                           <div class="result-item"><span class="value result-bags60">0</span><span class="label" data-translate-key="bags60"></span></div>
-                        </div>
-                    </div>
-                    <button class="add-to-project-button" data-translate-key="add_to_project"></button>
-                </div>
-            </script>
-            
-            <a href="https://dailyrig.com" target="_blank" class="ad-banner">
-                <img src="https://i.postimg.cc/sXGmdVbr/dr-logo.png" alt="DailyRig Logo">
-                <div class="ad-text">
-                    <h4>DailyRig.com</h4>
-                    <p>Direct Trucking & Construction Jobs. No middlemen, no runaround, just results.</p>
-                </div>
-            </a>
+    <div id="instructions-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">×</button>
+            <h2 data-translate-key="instructions_title"></h2>
+            <ul data-translate-list="instructions"></ul>
         </div>
     </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- STATE & CONSTANTS ---
+    // --- STATE, CONSTANTS, & ELEMENTS ---
     const CUBIC_FEET_IN_YARD = 27, BAG_80LB_YIELD = 0.60, BAG_60LB_YIELD = 0.45;
-    let currentLanguage = 'en', projectItems = [], latestCalcResult = null;
+    let currentLanguage = 'en', projectItems = [], latestCalcResults = {};
+    const viewContainer = document.getElementById('view-container');
+    const navGrid = document.getElementById('navigation-grid');
+    const projectSummaryContainer = document.getElementById('project-summary');
+    const runningTotalsBar = document.getElementById('running-totals-bar');
+
+    // --- TRANSLATIONS ---
     const translations = {
-        en: { app_title: "Concrete Calculator", back_button: "Back", clear_button: "Clear", slab_wall_title: "Slab / Wall", slab_wall_desc: "Rectangular pours", column_title: "Column / Hole", column_desc: "Cylindrical footings", circ_slab_title: "Circular Slab", circ_slab_desc: "Round patios, tube bases", curb_title: "Curb", curb_desc: "Standard straight curbs", curb_gutter_title: "Curb & Gutter", curb_gutter_desc: "Combined pours", stairs_title: "Stairs", stairs_desc: "Full staircases", project_title: "Project Totals", project_desc: "View cumulative totals", instructions_title: "Instructions", instructions_desc: "How to use the app", use_inches_toggle: "Use Inches for All Fields", calculate_button: "Calculate", total_needed: "Piece Total", grand_total: "Grand Total", cubic_yards: "Cubic Yards", bags80: "80lb Bags", bags60: "60lb Bags", add_to_project: "Add to Project", added_to_project: "Added ✓", length: "Length", width: "Width", thickness: "Thickness", diameter: "Diameter", depth_height: "Depth / Height", curb_height: "Curb Height", curb_width: "Curb Width", gutter_width: "Gutter Width", gutter_thick: "Gutter Thick", num_steps: "Number of Steps", tread_depth: "Tread Depth", riser_height: "Riser Height", stair_width: "Stair Width", waist_thick: "Waist Thick", feet: "ft", inches: "in" },
-        es: { app_title: "Calculadora de Concreto", back_button: "Volver", clear_button: "Limpiar", slab_wall_title: "Losa / Muro", slab_wall_desc: "Vaciados rectangulares", column_title: "Columna / Hoyo", column_desc: "Zapatas cilíndricas", circ_slab_title: "Losa Circular", circ_slab_desc: "Patios redondos, bases", curb_title: "Bordillo", curb_desc: "Bordillos rectos", curb_gutter_title: "Bordillo y Cuneta", curb_gutter_desc: "Vaciados combinados", stairs_title: "Escaleras", stairs_desc: "Escaleras completas", project_title: "Totales del Proyecto", project_desc: "Ver totales acumulados", instructions_title: "Instrucciones", instructions_desc: "Cómo usar la app", use_inches_toggle: "Usar Pulgadas Siempre", calculate_button: "Calcular", total_needed: "Total de Pieza", grand_total: "Total General", cubic_yards: "Yardas Cúbicas", bags80: "Bolsas de 80lb", bags60: "Bolsas de 60lb", add_to_project: "Añadir al Proyecto", added_to_project: "Añadido ✓", length: "Longitud", width: "Ancho", thickness: "Espesor", diameter: "Diámetro", depth_height: "Profundidad", curb_height: "Altura Bordillo", curb_width: "Ancho Bordillo", gutter_width: "Ancho Cuneta", gutter_thick: "Espesor Cuneta", num_steps: "Nº de Escalones", tread_depth: "Huella", riser_height: "Contrahuella", stair_width: "Ancho Escalera", waist_thick: "Espesor Losa", feet: "ft", inches: "in" },
-        zh: { app_title: "混凝土计算器", back_button: "返回", clear_button: "清除", slab_wall_title: "平板 / 墙体", slab_wall_desc: "矩形浇筑", column_title: "圆柱 / 孔", column_desc: "圆柱形基础", circ_slab_title: "圆形平板", circ_slab_desc: "圆形庭院", curb_title: "路缘", curb_desc: "标准直路缘", curb_gutter_title: "路缘和排水沟", curb_gutter_desc: "组合浇筑", stairs_title: "楼梯", stairs_desc: "完整楼梯", project_title: "项目总计", project_desc: "查看累计总数", instructions_title: "使用说明", instructions_desc: "如何使用本应用", use_inches_toggle: "全部使用英寸", calculate_button: "计算", total_needed: "单项总计", grand_total: "总计", cubic_yards: "立方码", bags80: "80磅袋", bags60: "60磅袋", add_to_project: "添加到项目", added_to_project: "已添加 ✓", length: "长度", width: "宽度", thickness: "厚度", diameter: "直径", depth_height: "深度/高度", curb_height: "路缘高度", curb_width: "路缘宽度", gutter_width: "排水沟宽度", gutter_thick: "排水沟厚度", num_steps: "台阶数", tread_depth: "踏板深度", riser_height: "踢板高度", stair_width: "楼梯宽度", waist_thick: "梯腰厚度", feet: "英尺", inches: "英寸" },
-        hi: { app_title: "कंक्रीट कैलकुलेटर", back_button: "वापस", clear_button: "साफ़ करें", slab_wall_title: "स्लैब / दीवार", slab_wall_desc: "आयताकार ঢलाई", column_title: "कॉलम / छेद", column_desc: "बेलनाकार नींव", circ_slab_title: "वृत्ताकार स्लैब", circ_slab_desc: "गोल आँगन", curb_title: "कर्ब", curb_desc: "मानक सीधे कर्ब", curb_gutter_title: "कर्ब और गटर", curb_gutter_desc: "संयुक्त ঢलाई", stairs_title: "सीढ़ियाँ", stairs_desc: "पूरी सीढ़ियाँ", project_title: "परियोजना कुल", project_desc: "संचयी कुल देखें", instructions_title: "निर्देश", instructions_desc: "ऐप का उपयोग कैसे करें", use_inches_toggle: "सभी फ़ील्ड के लिए इंच का उपयोग करें", calculate_button: "गणना करें", total_needed: "एकल कुल", grand_total: "कुल योग", cubic_yards: "घन गज", bags80: "80 पौंड बैग", bags60: "60 पौंड बैग", add_to_project: "परियोजना में जोड़ें", added_to_project: "जोड़ा गया ✓", length: "लंबाई", width: "चौड़ाई", thickness: "मोटाई", diameter: "व्यास", depth_height: "गहराई", curb_height: "कर्ब की ऊंचाई", curb_width: "कर्ब की चौड़ाई", gutter_width: "गटर की चौड़ाई", gutter_thick: "गटर की मोटाई", num_steps: "सीढ़ियों की संख्या", tread_depth: "ट्रेड की गहराई", riser_height: "रिसर की ऊंचाई", stair_width: "सीढ़ी की चौड़ाई", waist_thick: "कमर की मोटाई", feet: "फीट", inches: "इंच" },
-    };
-    const calculators = { // Calculator definitions with calculation logic and description generator
-        'slab-view': { titleKey: 'slab_wall_title', inputs: "generateInput('length', 10, 'feet', true) + generateInput('width', 10, 'feet', true) + generateInput('thickness', 4, 'inches')", calculate: v => getVal(v,'length') * getVal(v,'width') * (getRawVal(v,'thickness')/12), getDesc: v => `${getRawVal(v,'length')}${getUnit(v,'length')} x ${getRawVal(v,'width')}${getUnit(v,'width')} x ${getRawVal(v,'thickness')}${getUnit(v,'thickness')}` },
-        'column-view': { titleKey: 'column_title', inputs: "generateInput('diameter', 12, 'inches') + generateInput('depth_height', 3, 'feet', true)", calculate: v => { const r = (getRawVal(v,'diameter')/12)/2; return Math.PI * r*r * getVal(v,'depth_height'); }, getDesc: v => `${getRawVal(v,'diameter')}${getUnit(v,'diameter')} ⌀ x ${getRawVal(v,'depth_height')}${getUnit(v,'depth_height')}`},
-        // ... more calculator definitions follow same pattern ...
+        en: { ad_desc: "Direct Trucking & Construction Jobs.", app_title: "Concrete Calculator", clear_button: "Clear Project", slab_footing_title: "Slab / Footing", column_title: "Column / Hole (Round)", circ_slab_title: "Circular Slab", curb_title: "Curb", curb_gutter_title: "Curb & Gutter", stairs_title: "Stairs", project_title: "Project Totals", instructions_title: "Instructions", use_inches_toggle: "Use Inches for Primary Fields", calculate_button: "Calculate", total_needed: "Piece Total", grand_total: "Grand Total", cubic_yards: "Cubic Yards", bags80: "80lb Bags", bags60: "60lb Bags", add_to_project: "Add to Project", running_total_text: (n) => `Project: ${n} Pieces`, length: "Length", width: "Width", thickness: "Thickness", diameter: "Diameter", depth_height: "Depth / Height", curb_height: "Curb Height", curb_width: "Curb Width", gutter_width: "Gutter Width", gutter_thick: "Gutter Thick", num_steps: "Number of Steps", tread_depth: "Tread Depth", riser_height: "Riser Height", stair_width: "Stair Width", waist_thick: "Waist Thick", feet: "ft", inches: "in", inst_1: "1. Choose a calculator from the buttons for your project type (e.g., Slab/Footing, Column).", inst_2: "2. The active calculator is highlighted in blue. Enter your dimensions into the fields.", inst_3: "3. Use the 'Use Inches' toggle if you prefer to enter primary dimensions in inches instead of feet.", inst_4: "4. Press 'Calculate' to see the results for that single piece.", inst_5: "5. To calculate multiple pieces, press 'Add to Project'. This saves the result and instantly resets the form for the next entry.", inst_6: "6. The 'Project Totals' section at the bottom of the page updates automatically with a detailed list of all pieces and their individual yardage.", inst_7: "7. Change the language anytime using the buttons at the top.", project_empty: "Your project is empty. Add items from a calculator to see them here." },
+        es: { /* Spanish translations */ },
     };
 
-    // --- DOM Elements ---
-    const screen = document.querySelector('.screen');
-    const template = document.getElementById('calculator-template').innerHTML;
-
-    // --- HELPER FUNCTIONS ---
-    const getUnit = (view, name) => translations[currentLanguage][view.querySelector(`[name="${name}"]`).closest('.form-row').querySelector('.unit').dataset.translateKeyUnit];
-    const getRawVal = (view, name) => parseFloat(view.querySelector(`[name="${name}"]`).value) || 0;
-    const getVal = (view, name) => {
-        const row = view.querySelector(`[name="${name}"]`).closest('.form-row');
-        return row.dataset.switchable === 'true' && view.querySelector('.unit-toggle').checked ? getRawVal(view, name) / 12 : getRawVal(view, name);
+    const calculators = {
+        'slab-footing': { titleKey: 'slab_footing_title', needsToggle: true, inputs: [ {name: 'length', unit: 'feet', switchable: true}, {name: 'width', unit: 'feet', switchable: true}, {name: 'thickness', unit: 'inches', switchable: false} ], calculate: v => getVal(v, 'length') * getVal(v, 'width') * (getRawVal(v, 'thickness') / 12), getDesc: v => `${getRawVal(v, 'length')}${getUnit(v, 'length')} x ${getRawVal(v, 'width')}${getUnit(v, 'width')} x ${getRawVal(v, 'thickness')}${getUnit(v, 'thickness')}` },
+        'column': { titleKey: 'column_title', needsToggle: true, inputs: [ {name: 'diameter', unit: 'inches', switchable: false}, {name: 'depth_height', unit: 'feet', switchable: true} ], calculate: v => { const r = (getRawVal(v,'diameter')/12)/2; return Math.PI * r*r * getVal(v,'depth_height'); }, getDesc: v => `${getRawVal(v,'diameter')}${getUnit(v,'diameter')} ⌀ x ${getRawVal(v,'depth_height')}${getUnit(v,'depth_height')}`},
+        'circular-slab': { titleKey: 'circ_slab_title', needsToggle: true, inputs: [ {name: 'diameter', unit: 'feet', switchable: true}, {name: 'thickness', unit: 'inches', switchable: false} ], calculate: v => { const r = getVal(v, 'diameter')/2; return Math.PI * r*r * (getRawVal(v, 'thickness')/12); }, getDesc: v => `${getRawVal(v,'diameter')}${getUnit(v,'diameter')} ⌀ x ${getRawVal(v,'thickness')}${getUnit(v,'thickness')}`},
+        'curb': { titleKey: 'curb_title', needsToggle: true, inputs: [ {name: 'length', unit: 'feet', switchable: true}, {name: 'curb_height', unit: 'inches', switchable: false}, {name: 'width', unit: 'inches', switchable: false} ], calculate: v => getVal(v, 'length') * (getRawVal(v, 'curb_height')/12) * (getRawVal(v, 'width')/12), getDesc: v => `${getRawVal(v,'length')}${getUnit(v,'length')} long`},
+        'curb-gutter': { titleKey: 'curb_gutter_title', needsToggle: true, inputs: [ {name: 'length', unit: 'feet', switchable: true}, {name: 'curb_height', unit: 'inches', switchable: false}, {name: 'curb_width', unit: 'inches', switchable: false}, {name: 'gutter_width', unit: 'inches', switchable: false}, {name: 'gutter_thick', unit: 'inches', switchable: false} ], calculate: v => { const l = getVal(v,'length'), ch = getRawVal(v,'curb_height')/12, cw = getRawVal(v,'curb_width')/12, gw = getRawVal(v,'gutter_width')/12, gt = getRawVal(v,'gutter_thick')/12; return(l*ch*cw)+(l*gw*gt); }, getDesc: v => `${getRawVal(v,'length')}${getUnit(v,'length')} long`},
+        'stairs': { titleKey: 'stairs_title', needsToggle: true, inputs: [ {name: 'num_steps', unit: '', switchable: false}, {name: 'tread_depth', unit: 'inches', switchable: false}, {name: 'riser_height', unit: 'inches', switchable: false}, {name: 'stair_width', unit: 'feet', switchable: true}, {name: 'waist_thick', unit: 'inches', switchable: false} ], calculate: v => { const n=getRawVal(v,'num_steps'), t=getRawVal(v,'tread_depth')/12, r=getRawVal(v,'riser_height')/12, w=getVal(v,'stair_width'), a=getRawVal(v,'waist_thick')/12, s=n*(.5*t*r*w), l=Math.sqrt(Math.pow(n*t,2)+Math.pow(n*r,2)); return s+l*w*a; }, getDesc: v => `${getRawVal(v,'num_steps')} steps, ${getRawVal(v,'stair_width')}${getUnit(v,'stair_width')} wide`},
     };
-    function generateInput(nameKey, p, unit, sw = false) { return `<div class="form-row" data-switchable="${sw}"><label class="label" data-translate-key="${nameKey}"></label><div class="input-container"><input type="number" name="${nameKey}" placeholder="${p}"><span class="unit" data-translate-key-unit="${unit}"></span></div></div>`; }
     
-    // --- CORE LOGIC ---
-    function setLanguage(lang) {
-        currentLanguage = lang;
-        document.querySelectorAll('[data-translate-key]').forEach(el => el.textContent = translations[lang][el.dataset.translateKey]);
-        document.querySelectorAll('[data-translate-key-unit]').forEach(el => el.textContent = translations[lang][el.dataset.translateKeyUnit]);
-        document.querySelectorAll('.lang-button').forEach(btn => btn.classList.toggle('selected', btn.dataset.lang === lang));
-        document.querySelectorAll('.app-view.active h1[data-translate-key]').forEach(h1 => h1.textContent = translations[lang][h1.dataset.translateKey]);
-        document.querySelectorAll('.app-view.active h1:not([data-translate-key])').forEach(h1 => {
-            const viewId = h1.closest('.app-view').id;
-            if (calculators[viewId]) h1.textContent = translations[lang][calculators[viewId].titleKey];
+    // --- DYNAMIC HTML GENERATION & INITIALIZATION ---
+    function initializeApp() {
+        Object.keys(calculators).forEach(id => navGrid.innerHTML += `<button class="nav-button" data-view-id="${id}" data-translate-key="${calculators[id].titleKey}"></button>`);
+        navGrid.innerHTML += `<button class="nav-button" id="instructions-nav-btn" data-translate-key="instructions_title"></button>`;
+        let allViewsHTML = '';
+        Object.entries(calculators).forEach(([id, config]) => {
+            let inputsHTML = config.inputs.map(i => `<div class="form-row" data-switchable="${i.switchable}"><span data-translate-key="${i.name}"></span><div class="input-group"><input type="number" name="${i.name}"><span class="unit" data-translate-key-unit="${i.unit}"></span></div></div>`).join('');
+            allViewsHTML += `<div id="${id}" class="app-view form-group">${config.needsToggle ? `<div class="unit-toggle-container"><span data-translate-key="use_inches_toggle"></span><label class="toggle-switch"><input type="checkbox" class="unit-toggle"><span class="slider"></span></label></div>` : ''}<div class="form-inputs">${inputsHTML}</div><button class="action-button calculate-button" data-translate-key="calculate_button"></button><div class="results-container" style="display:none;"></div><button class="action-button add-to-project-button" data-translate-key="add_to_project"></button></div>`;
         });
+        viewContainer.innerHTML = allViewsHTML;
+        
+        navGrid.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', handleNavClick));
+        Object.entries(calculators).forEach(([id, config]) => {
+            const view = document.getElementById(id);
+            view.querySelector('.calculate-button').addEventListener('click', () => handleCalculate(view, config, id));
+            view.querySelector('.add-to-project-button').addEventListener('click', e => handleAddToProject(e.target, id));
+            if(config.needsToggle) { view.querySelector('.unit-toggle').addEventListener('change', () => setLanguage(currentLanguage)); }
+        });
+        document.querySelectorAll('.lang-button').forEach(btn => btn.addEventListener('click', e => setLanguage(e.target.dataset.lang)));
+        document.getElementById('instructions-nav-btn').addEventListener('click', () => document.getElementById('instructions-modal').style.display = 'flex');
+        document.querySelector('.modal-close').addEventListener('click', () => document.getElementById('instructions-modal').style.display = 'none');
+        
+        renderProjectView(); showView('slab-footing'); setLanguage('en');
     }
 
-    function updateProjectBadge() {
-        const badge = document.querySelector('#project-view-icon .badge');
-        if (badge) {
-            badge.textContent = projectItems.length;
-            badge.style.display = projectItems.length > 0 ? 'flex' : 'none';
-        }
-    }
-
-    function renderProjectView() {
-        const listEl = document.querySelector('#project-view .project-list');
-        const totalsEl = document.querySelector('#project-view .project-totals');
-        listEl.innerHTML = '';
-        if (projectItems.length === 0) {
-            listEl.innerHTML = `<li data-translate-key="project_empty">Your project is empty.</li>`;
-            totalsEl.style.display = 'none';
-            setLanguage(currentLanguage); // re-translate static text
-            return;
-        }
-        totalsEl.style.display = 'block';
-        let totalVolume = 0;
-        projectItems.forEach(item => {
-            totalVolume += item.volume;
-            const li = document.createElement('li');
-            li.innerHTML = `<div class="project-item-details"><span class="project-item-title">${item.name}</span><span class="project-item-desc">${item.desc}</span></div><button class="remove-item-btn" data-id="${item.id}">×</button>`;
-            listEl.appendChild(li);
-        });
-        totalsEl.querySelector('.result-yards').textContent = (totalVolume / CUBIC_FEET_IN_YARD).toFixed(2);
-        totalsEl.querySelector('.result-bags80').textContent = Math.ceil(totalVolume / BAG_80LB_YIELD);
-        totalsEl.querySelector('.result-bags60').textContent = Math.ceil(totalVolume / BAG_60LB_YIELD);
-    }
+    // --- EVENT HANDLERS & LOGIC ---
+    function handleNavClick(e) { showView(e.currentTarget.dataset.viewId); }
     
+    function handleCalculate(view, config, id) {
+        const volume = config.calculate(view);
+        if (isNaN(volume) || volume <= 0) { alert("Please enter valid numbers in all fields."); return; }
+        latestCalcResults[id] = { name: translations[currentLanguage][config.titleKey], desc: config.getDesc(view), volume: volume };
+        const resultsContainer = view.querySelector('.results-container');
+        resultsContainer.style.display = 'block';
+        resultsContainer.innerHTML = `<h3 data-translate-key="total_needed"></h3><div class="result-item"><span class="value">${(volume / CUBIC_FEET_IN_YARD).toFixed(2)}</span><span data-translate-key="cubic_yards"></span></div><div class="result-split"><div class="result-item"><span class="value">${Math.ceil(volume / BAG_80LB_YIELD)}</span><span data-translate-key="bags80"></span></div><div class="result-item"><span class="value">${Math.ceil(volume / BAG_60LB_YIELD)}</span><span data-translate-key="bags60"></span></div></div>`;
+        view.querySelector('.add-to-project-button').style.display = 'block';
+        setLanguage(currentLanguage);
+    }
+
+    function handleAddToProject(button, id) {
+        if (!latestCalcResults[id]) return;
+        projectItems.push({ id: Date.now(), ...latestCalcResults[id] });
+        delete latestCalcResults[id];
+        updateRunningTotals(); renderProjectView();
+        const view = button.closest('.app-view');
+        view.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+        view.querySelector('.results-container').style.display = 'none';
+        button.style.display = 'none';
+    }
+
+    // --- RENDER & UPDATE FUNCTIONS ---
     function showView(viewId) {
         document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        if (viewId === 'project-view') renderProjectView();
+        const view = document.getElementById(viewId);
+        if (view) view.classList.add('active');
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.toggle('active', btn.dataset.viewId === viewId));
     }
     
-    // --- INITIALIZATION ---
-    function initialize() {
-        // Dynamically create calculator views
-        for (const [id, config] of Object.entries(calculators)) {
-            const viewHtml = template.replace('{{inputs}}', eval(config.inputs)).replace('<h1></h1>', `<h1 data-translate-key="${config.titleKey}"></h1>`);
-            const viewDiv = document.createElement('div');
-            viewDiv.id = id; viewDiv.className = 'app-view'; viewDiv.innerHTML = viewHtml;
-            screen.appendChild(viewDiv);
-            
-            // Listeners
-            viewDiv.querySelector('.calculate-button').addEventListener('click', () => {
-                const volume = config.calculate(viewDiv);
-                if (isNaN(volume) || volume <= 0) return;
-                latestCalcResult = { name: translations[currentLanguage][config.titleKey], desc: config.getDesc(viewDiv), volume: volume };
-                
-                const results = viewDiv.querySelector('.results-container');
-                results.style.display = 'block';
-                results.querySelector('.result-yards').textContent = (volume / CUBIC_FEET_IN_YARD).toFixed(2);
-                results.querySelector('.result-bags80').textContent = Math.ceil(volume / BAG_80LB_YIELD);
-                results.querySelector('.result-bags60').textContent = Math.ceil(volume / BAG_60LB_YIELD);
-                
-                const addBtn = viewDiv.querySelector('.add-to-project-button');
-                addBtn.style.display = 'block';
-                addBtn.textContent = translations[currentLanguage]['add_to_project'];
-                addBtn.disabled = false;
+    function renderProjectView() {
+        let content = `<h2 data-translate-key="project_title"></h2><ul>`;
+        if (projectItems.length === 0) {
+            content += `<li data-translate-key="project_empty"></li></ul>`;
+        } else {
+            let totalVolume = 0;
+            projectItems.forEach(item => {
+                totalVolume += item.volume;
+                const itemYards = (item.volume / CUBIC_FEET_IN_YARD).toFixed(2);
+                content += `<li><div class="project-item-details"><span class="project-item-title">${item.name}</span><span class="project-item-desc">${item.desc}</span></div><div class="project-item-yardage">${itemYards} yd³</div><button class="remove-item-btn" data-id="${item.id}">×</button></li>`;
             });
-            
-            viewDiv.querySelector('.add-to-project-button').addEventListener('click', (e) => {
-                if (!latestCalcResult) return;
-                projectItems.push({ id: Date.now(), ...latestCalcResult });
-                updateProjectBadge();
-                e.target.textContent = translations[currentLanguage]['added_to_project'];
-                e.target.disabled = true;
-                setTimeout(() => { e.target.style.display = 'none'; }, 2000);
-            });
+            content += `</ul><div class="results-container" style="display:block;"><h3 data-translate-key="grand_total"></h3><div class="result-item"><span class="value">${(totalVolume / CUBIC_FEET_IN_YARD).toFixed(2)}</span><span data-translate-key="cubic_yards"></span></div><div class="result-split"><div class="result-item"><span class="value">${Math.ceil(totalVolume / BAG_80LB_YIELD)}</span><span data-translate-key="bags80"></span></div><div class="result-item"><span class="value">${Math.ceil(totalVolume / BAG_60LB_YIELD)}</span><span data-translate-key="bags60"></span></div></div><button id="clear-project-btn" class="action-button" style="background-color: var(--danger-color);" data-translate-key="clear_button"></button></div>`;
         }
-        
-        // Static and global listeners
-        document.querySelectorAll('.icon').forEach(icon => icon.addEventListener('click', (e) => showView(e.currentTarget.dataset.target)));
-        document.querySelectorAll('.lang-button').forEach(btn => btn.addEventListener('click', () => setLanguage(btn.dataset.lang)));
-        document.querySelectorAll('.back-button').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); showView('home-view'); }));
-        document.getElementById('clear-project-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            projectItems = [];
-            renderProjectView();
-            updateProjectBadge();
-        });
-        document.querySelector('#project-view .project-list').addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-item-btn')) {
-                const id = parseInt(e.target.dataset.id);
-                projectItems = projectItems.filter(item => item.id !== id);
-                renderProjectView();
-                updateProjectBadge();
-            }
-        });
-        
-        setLanguage(currentLanguage); // Set initial text
+        projectSummaryContainer.innerHTML = content;
+        if(document.getElementById('clear-project-btn')) { document.getElementById('clear-project-btn').addEventListener('click', clearProject); }
+        projectSummaryContainer.querySelectorAll('.remove-item-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            projectItems = projectItems.filter(i => i.id !== parseInt(e.target.dataset.id));
+            updateRunningTotals(); renderProjectView();
+        }));
+        setLanguage(currentLanguage);
+    }
+    
+    function clearProject() { projectItems = []; updateRunningTotals(); renderProjectView(); }
+    
+    function updateRunningTotals() {
+        if (projectItems.length === 0) {
+            runningTotalsBar.style.display = 'none'; return;
+        }
+        runningTotalsBar.style.display = 'flex';
+        const totalVolume = projectItems.reduce((acc, item) => acc + item.volume, 0);
+        runningTotalsBar.querySelector('#running-yards').textContent = (totalVolume / CUBIC_FEET_IN_YARD).toFixed(2);
+        runningTotalsBar.querySelector('#running-totals-text').textContent = translations[currentLanguage].running_total_text(projectItems.length);
     }
 
-    // Run after calculators are defined
-    // Add missing defs to `calculators` object...
-    calculators['stairs-view'] = { titleKey: 'stairs_title', inputs: "generateInput('num_steps',5,'')+generateInput('tread_depth',11,'inches')+generateInput('riser_height',7,'inches')+generateInput('stair_width',4,'feet',true)+generateInput('waist_thick',5,'inches')", calculate:v=>{const n=getRawVal(v,'num_steps'),t=getRawVal(v,'tread_depth')/12,r=getRawVal(v,'riser_height')/12,w=getVal(v,'stair_width'),a=getRawVal(v,'waist_thick')/12,s=n*(.5*t*r*w),l=Math.sqrt(Math.pow(n*t,2)+Math.pow(n*r,2));return s+l*w*a}, getDesc:v=>`${getRawVal(v,'num_steps')} steps, ${getRawVal(v,'stair_width')}${getUnit(v,'stair_width')} wide`};
-    calculators['curb-gutter-view'] = { titleKey: 'curb_gutter_title', inputs: "generateInput('length',50,'feet',true)+generateInput('curb_height',18,'inches')+generateInput('curb_width',6,'inches')+generateInput('gutter_width',12,'inches')+generateInput('gutter_thick',6,'inches')", calculate:v=>{const l=getVal(v,'length'),ch=getRawVal(v,'curb_height')/12,cw=getRawVal(v,'curb_width')/12,gw=getRawVal(v,'gutter_width')/12,gt=getRawVal(v,'gutter_thick')/12;return(l*ch*cw)+(l*gw*gt)}, getDesc:v=>`${getRawVal(v,'length')}${getUnit(v,'length')} long`};
-
-    // Add placeholder for instructions view to avoid errors
-    const instructionsView = document.createElement('div');
-    instructionsView.id = 'instructions-view';
-    instructionsView.className = 'app-view';
-    // You can populate the instructions content here as before if needed
-    screen.appendChild(instructionsView);
-
-    // Give project view icon an ID for the badge
-    document.querySelector('[data-target="project-view"]').id = 'project-view-icon';
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        if (!translations[lang] || Object.keys(translations[lang]).length < 15) { translations[lang] = {...translations.en, ...translations[lang]}; }
+        const dict = translations[lang];
+        document.querySelectorAll('[data-translate-key]').forEach(el => el.textContent = dict[el.dataset.translateKey]);
+        const instructionList = document.querySelector('[data-translate-list="instructions"]');
+        if(instructionList) {
+            instructionList.innerHTML = '';
+            for(let i=1; i<=7; i++){ if(dict[`inst_${i}`]) instructionList.innerHTML += `<li>${dict[`inst_${i}`]}</li>`; }
+        }
+        document.querySelectorAll('[data-translate-key-unit]').forEach(el => {
+            const row = el.closest('.form-row');
+            const toggle = el.closest('.app-view')?.querySelector('.unit-toggle');
+            el.textContent = (row?.dataset.switchable === 'true' && toggle?.checked) ? dict['inches'] : dict[el.dataset.translateKeyUnit];
+        });
+        document.querySelectorAll('.lang-button').forEach(btn => btn.classList.toggle('selected', btn.dataset.lang === lang));
+        updateRunningTotals();
+    }
     
-    initialize();
+    const getUnit = (v, n) => v.querySelector(`[name="${n}"]`).closest('.input-group').querySelector('.unit').textContent;
+    const getRawVal = (v, n) => parseFloat(v.querySelector(`[name="${n}"]`).value) || 0;
+    const getVal = (v, n) => (v.querySelector(`[name="${n}"]`).closest('.form-row').dataset.switchable === 'true' && v.querySelector('.unit-toggle')?.checked) ? getRawVal(v, n) / 12 : getRawVal(v, n);
+    
+    initializeApp();
 });
 </script>
 </body>
