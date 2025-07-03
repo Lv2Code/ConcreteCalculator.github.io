@@ -16,11 +16,11 @@
         .app-header { padding: 20px; background: var(--secondary-color); color: white; text-align: center; }
         .app-header h1 { margin: 0; font-size: 1.8em; }
         .language-selector { display: flex; justify-content: center; gap: 10px; padding: 15px; background: #f0f0f0; border-bottom: 1px solid var(--border-color); }
-        .lang-button { background: #fff; border: 1px solid #ccc; color: #555; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: all 0.2s; }
+        .lang-button { background: #fff; border: 1px solid #ccc; color: #555; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
         .lang-button.selected { background: var(--primary-color); color: white; border-color: var(--primary-color); }
         .app-body { padding: 25px; }
         .navigation-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
-        .nav-button { flex-grow: 1; padding: 10px; background: #fff; border: 1px solid #ccc; color: #333; border-radius: 5px; cursor: pointer; font-size: 0.9em; text-align: center; font-weight: 500; transition: background-color 0.2s, color 0.2s, border-color 0.2s; position: relative; }
+        .nav-button { flex-grow: 1; padding: 10px; background: #fff; border: 1px solid #ccc; color: #333; border-radius: 5px; cursor: pointer; font-size: 14px; text-align: center; font-weight: 500; transition: background-color 0.2s, color 0.2s, border-color 0.2s; position: relative; }
         .nav-button.active { background: var(--primary-color); color: white; border-color: var(--primary-dark); }
         #running-totals-bar { display: none; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--info-bg); border: 1px solid var(--primary-color); border-radius: 5px; margin-bottom: 25px; font-size: 0.9em; position: sticky; top: 10px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .app-view { display: none; }
@@ -30,7 +30,7 @@
         .form-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
         .form-row:last-child { border-bottom: none; }
         .input-group { display: flex; align-items: center; gap: 8px; }
-        .input-group input { width: 80px; text-align: right; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .input-group input { width: 80px; text-align: right; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; /* Prevents auto-zoom on mobile */ }
         .unit-toggle-container { display: flex; justify-content: space-between; align-items: center; }
         .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -51,18 +51,15 @@
         .project-item-details { display: flex; flex-direction: column; }
         .project-item-yardage { font-size: 0.9em; font-weight: bold; color: var(--primary-color); margin-left: 10px; text-align: right; }
         .remove-item-btn { background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-weight: 700; cursor: pointer; flex-shrink: 0; margin-left: 15px;}
-        .ad-banner { display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-top: 1px solid var(--border-color); text-decoration: none; color: inherit; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
         .modal-close { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; }
         #instructions-modal ul { list-style: disc; padding-left: 20px; }
-
-        /* --- MOBILE PADDING ADJUSTMENT --- */
         @media (max-width: 600px) {
             body { padding: 0; }
             .main-container { border-radius: 0; }
             .app-body { padding: 15px; }
-            #running-totals-bar { top: 0; border-radius: 0; }
+            #running-totals-bar { top: 0; border-radius: 0; margin-left: -15px; margin-right: -15px; border-left: none; border-right:none; }
         }
     </style>
 </head>
@@ -81,10 +78,6 @@
             <div id="view-container"></div>
             <div id="project-summary"></div>
         </main>
-        <a href="https://dailyrig.com" target="_blank" class="ad-banner">
-            <img src="https://i.postimg.cc/sXGmdVbr/dr-logo.png" alt="DailyRig Logo">
-            <div><h4>DailyRig.com</h4><p data-translate-key="ad_desc"></p></div>
-        </a>
     </div>
 
     <div id="instructions-modal" class="modal-overlay">
@@ -97,7 +90,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- STATE, CONSTANTS, & ELEMENTS ---
     const CUBIC_FEET_IN_YARD = 27, BAG_80LB_YIELD = 0.60, BAG_60LB_YIELD = 0.45;
     let currentLanguage = 'en', projectItems = [], latestCalcResults = {};
     const viewContainer = document.getElementById('view-container');
@@ -105,10 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectSummaryContainer = document.getElementById('project-summary');
     const runningTotalsBar = document.getElementById('running-totals-bar');
 
-    // --- TRANSLATIONS (with updated slab/footing key) ---
     const translations = {
-        en: { ad_desc: "Direct Trucking & Construction Jobs.", app_title: "Concrete Calculator", clear_button: "Clear Project", slab_footing_title: "Slab / Footing", column_title: "Column / Hole (Round)", circ_slab_title: "Circular Slab", curb_title: "Curb", curb_gutter_title: "Curb & Gutter", stairs_title: "Stairs", project_title: "Project Totals", instructions_title: "Instructions", use_inches_toggle: "Use Inches for Primary Fields", calculate_button: "Calculate", total_needed: "Piece Total", grand_total: "Grand Total", cubic_yards: "Cubic Yards", bags80: "80lb Bags", bags60: "60lb Bags", add_to_project: "Add to Project", running_total_text: (n) => `Project: ${n} Pieces`, length: "Length", width: "Width", thickness: "Thickness", diameter: "Diameter", depth_height: "Depth / Height", curb_height: "Curb Height", curb_width: "Curb Width", gutter_width: "Gutter Width", gutter_thick: "Gutter Thick", num_steps: "Number of Steps", tread_depth: "Tread Depth", riser_height: "Riser Height", stair_width: "Stair Width", waist_thick: "Waist Thick", feet: "ft", inches: "in", inst_1: "1. Choose a calculator from the buttons for your project type (e.g., Slab/Footing, Column).", inst_2: "2. The active calculator is highlighted in blue. Enter your dimensions into the fields.", inst_3: "3. Use the 'Use Inches' toggle if you prefer to enter primary dimensions in inches instead of feet.", inst_4: "4. Press 'Calculate' to see the results for that single piece.", inst_5: "5. To calculate multiple pieces, press 'Add to Project'. This saves the result and instantly resets the form for the next entry.", inst_6: "6. The 'Project Totals' section at the bottom of the page updates automatically with a detailed list of all pieces and their individual yardage.", inst_7: "7. Change the language anytime using the buttons at the top.", project_empty: "Your project is empty. Add items from a calculator to see them here." },
-        es: { /* Spanish translations */ },
+        en: { app_title: "Concrete Calculator", clear_button: "Clear Project", slab_footing_title: "Slab / Footing", column_title: "Column / Hole (Round)", circ_slab_title: "Circular Slab", curb_title: "Curb", curb_gutter_title: "Curb & Gutter", stairs_title: "Stairs", project_title: "Project Totals", instructions_title: "Instructions", use_inches_toggle: "Use Inches for Primary Fields", calculate_button: "Calculate", total_needed: "Piece Total", grand_total: "Grand Total", cubic_yards: "Cubic Yards", bags80: "80lb Bags", bags60: "60lb Bags", add_to_project: "Add to Project", running_total_text: (n) => `Project: ${n} Pieces`, length: "Length", width: "Width", thickness: "Thickness", diameter: "Diameter", depth_height: "Depth / Height", curb_height: "Curb Height", curb_width: "Curb Width", gutter_width: "Gutter Width", gutter_thick: "Gutter Thick", num_steps: "Number of Steps", tread_depth: "Tread Depth", riser_height: "Riser Height", stair_width: "Stair Width", waist_thick: "Waist Thick", feet: "ft", inches: "in", inst_1: "1. Choose a calculator from the buttons for your project type (e.g., Slab/Footing, Column).", inst_2: "2. The active calculator is highlighted in blue. Enter your dimensions into the fields.", inst_3: "3. Use the 'Use Inches' toggle if you prefer to enter primary dimensions in inches instead of feet.", inst_4: "4. Press 'Calculate' to see the results for that single piece.", inst_5: "5. To calculate multiple pieces, press 'Add to Project'. This saves the result and instantly resets the form for the next entry.", inst_6: "6. The 'Project Totals' section at the bottom of the page updates automatically with a detailed list of all pieces and their individual yardage.", inst_7: "7. Change the language anytime using the buttons at the top.", project_empty: "Your project is empty. Add items from a calculator to see them here." },
+        es: { app_title: "Calculadora de Concreto", clear_button: "Limpiar Proyecto", slab_footing_title: "Losa / Zapata", column_title: "Columna / Hoyo (Redondo)", circ_slab_title: "Losa Circular", curb_title: "Bordillo", curb_gutter_title: "Bordillo y Cuneta", stairs_title: "Escaleras", project_title: "Totales del Proyecto", instructions_title: "Instrucciones", use_inches_toggle: "Usar Pulgadas", calculate_button: "Calcular", total_needed: "Total de Pieza", grand_total: "Total General", cubic_yards: "Yardas Cúbicas", bags80: "Bolsas de 80lb", bags60: "Bolsas de 60lb", add_to_project: "Añadir al Proyecto", running_total_text: (n) => `Proyecto: ${n} Piezas`, length: "Longitud", width: "Ancho", thickness: "Espesor", diameter: "Diámetro", depth_height: "Profundidad", curb_height: "Altura Bordillo", curb_width: "Ancho Bordillo", gutter_width: "Ancho Cuneta", gutter_thick: "Espesor Cuneta", num_steps: "Nº de Escalones", tread_depth: "Huella", riser_height: "Contrahuella", stair_width: "Ancho Escalera", waist_thick: "Espesor Losa", feet: "ft", inches: "in", inst_1: "1. Elija una calculadora de los botones.", inst_2: "2. La calculadora activa está resaltada en azul. Ingrese sus dimensiones.", inst_3: "3. Use el interruptor 'Usar Pulgadas' para usar pulgadas en lugar de pies.", inst_4: "4. Presione 'Calcular' para ver el resultado de esa pieza.", inst_5: "5. Para calcular varias piezas, presione 'Añadir al Proyecto'. Esto guarda el resultado y reinicia el formulario.", inst_6: "6. La sección 'Totales del Proyecto' en la parte inferior de la página se actualiza automáticamente con una lista detallada.", inst_7: "7. Cambie el idioma en cualquier momento usando los botones en la parte superior.", project_empty: "Su proyecto está vacío." },
     };
 
     const calculators = {
@@ -206,24 +197,36 @@ document.addEventListener('DOMContentLoaded', () => {
         runningTotalsBar.style.display = 'flex';
         const totalVolume = projectItems.reduce((acc, item) => acc + item.volume, 0);
         runningTotalsBar.querySelector('#running-yards').textContent = (totalVolume / CUBIC_FEET_IN_YARD).toFixed(2);
-        runningTotalsBar.querySelector('#running-totals-text').textContent = translations[currentLanguage].running_total_text(projectItems.length);
+        const textFunc = translations[currentLanguage].running_total_text || translations.en.running_total_text;
+        runningTotalsBar.querySelector('#running-totals-text').textContent = textFunc(projectItems.length);
     }
 
     function setLanguage(lang) {
         currentLanguage = lang;
-        if (!translations[lang] || Object.keys(translations[lang]).length < 15) { translations[lang] = {...translations.en, ...translations[lang]}; }
-        const dict = translations[lang];
-        document.querySelectorAll('[data-translate-key]').forEach(el => el.textContent = dict[el.dataset.translateKey]);
+        if (!translations[lang]) lang = 'en'; // Fallback to English if lang not found
+        const dict = { ...translations.en, ...translations[lang] }; // Use English as a base
+        
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.dataset.translateKey;
+            if (typeof dict[key] === 'function') {
+                // Handle functions like running_total_text later
+            } else {
+                el.textContent = dict[key];
+            }
+        });
+        
         const instructionList = document.querySelector('[data-translate-list="instructions"]');
         if(instructionList) {
             instructionList.innerHTML = '';
             for(let i=1; i<=7; i++){ if(dict[`inst_${i}`]) instructionList.innerHTML += `<li>${dict[`inst_${i}`]}</li>`; }
         }
+        
         document.querySelectorAll('[data-translate-key-unit]').forEach(el => {
             const row = el.closest('.form-row');
             const toggle = el.closest('.app-view')?.querySelector('.unit-toggle');
             el.textContent = (row?.dataset.switchable === 'true' && toggle?.checked) ? dict['inches'] : dict[el.dataset.translateKeyUnit];
         });
+        
         document.querySelectorAll('.lang-button').forEach(btn => btn.classList.toggle('selected', btn.dataset.lang === lang));
         updateRunningTotals();
     }
