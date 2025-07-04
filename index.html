@@ -1,860 +1,462 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> DAILYRIG.COM - Concrete Estimator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=Hind:wght@400;500;700&display=swap');
+        
+        :root {
+            --primary-color: #f07c00; --primary-dark: #d96d00; --secondary-color: #212529;
+            --accent-color: #005a9c; --accent-dark: #004a80; --background-color: #f8f9fa;
+            --card-bg: #ffffff; --text-color: #212529; --text-muted: #6c757d;
+            --border-color: #e0e0e0; --success-color: #28a745; --danger-color: #dc3545;
+            --warning-bg: #fffbeb; --warning-border: #e6a800; --info-bg: #e6f0f7;
+        }
 
-@section('content')
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <div class="mb-2 mb-md-0">
-                            <h4 class="mb-0">
-                                <i class="fas fa-user-edit me-2"></i>Edit Patient - {{ $patient->getFullNameAttribute() }}
-                            </h4>
-                        </div>
-                        <div class="btn-group flex-wrap">
-                            <button type="button" class="btn btn-info btn-sm" onclick="emailPrescriptions()">
-                                <i class="fas fa-envelope me-1"></i>Email Prescriptions
-                            </button>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                    <i class="fas fa-print me-1"></i>Print Forms
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="printReorderEG()">
-                                        <i class="fas fa-glasses me-2"></i>Reorder EG Form
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="printReorderCL()">
-                                        <i class="fas fa-circle me-2"></i>Reorder CL Form
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="printBlankForm()">
-                                        <i class="fas fa-file me-2"></i>Blank Form
-                                    </a></li>
-                                </ul>
-                            </div>
-                            <a href="{{ route('patients.show', $patient->autoID) }}" class="btn btn-outline-light btn-sm">
-                                <i class="fas fa-arrow-left me-1"></i>Back to Patient
-                            </a>
-                        </div>
+        html.dark-mode {
+            --primary-color: #ff9800; --primary-dark: #f07c00; --secondary-color: #343a40;
+            --accent-color: #58a6ff; --accent-dark: #3a8cff; --background-color: #121212;
+            --card-bg: #1e1e1e; --text-color: #e9ecef; --text-muted: #adb5bd;
+            --border-color: #495057; --warning-bg: #332b00; --warning-border: #ffc107;
+            --info-bg: #1c2a38;
+        }
+        
+        body { font-family: 'Roboto', 'Noto Sans', 'Hind', 'Noto Sans SC', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 20px; }
+        .main-container { max-width: 650px; margin: 40px auto; background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--secondary-color); color: var(--card-bg); text-align: center; }
+        .app-header h1 { margin: 0; font-size: 1.8em; flex-grow: 1; }
+        .language-selector { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
+        .lang-button { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .lang-button.selected { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        .app-body { padding: 25px; }
+        .navigation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 25px; }
+        .nav-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; cursor: pointer; text-align: center; font-weight: 500; transition: all 0.2s; }
+        .nav-button span { font-size: 0.9em; line-height: 1.2; }
+        .nav-button svg { width: 32px; height: 32px; fill: var(--text-color); opacity: 0.7; transition: all 0.2s; }
+        .nav-button.active { background: var(--accent-color); color: white; border-color: var(--accent-dark); }
+        .nav-button.active svg { fill: white; opacity: 1; }
+        .app-view { display: none; animation: fadeIn 0.5s; }
+        .app-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group, .results-container, .settings-panel { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; }
+        .form-inputs { padding: 15px; }
+        .form-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .form-row:last-child { border-bottom: none; }
+        .input-group { display: flex; align-items: center; gap: 8px; }
+        .input-group input { width: 80px; text-align: right; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; background-color: var(--background-color); color: var(--text-color); }
+        .input-group.ft-in-group input { width: 60px; }
+        .unit { color: var(--text-muted); }
+        .action-button { width: 100%; padding: 15px; font-size: 1.1em; font-weight: 700; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; transition: background-color 0.2s; }
+        .calculate-button, .recalculate-button { background-color: var(--primary-color); }
+        .calculate-button:hover, .recalculate-button:hover { background-color: var(--primary-dark); }
+        .add-to-project-button { background-color: var(--success-color); }
+        .copy-button { background-color: var(--accent-color) !important; color: white !important; }
+        .print-button { background-color: var(--accent-color) !important; }
+        .error-message { color: var(--danger-color); text-align: center; margin-top: 10px; font-weight: 500; min-height: 1.2em; }
+        #project-estimate-container { margin-top: 40px; padding-top: 25px; }
+        #project-estimate-container h2, .results-container h3, .settings-panel summary { text-align: center; margin-top: 0; color: var(--primary-color); font-weight: 500;}
+        #project-estimate-container ul { list-style: none; padding: 0; }
+        #project-estimate-container li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; }
+        .project-item-details { flex-grow: 1; margin-right: 15px; }
+        .project-item-name { font-weight: bold; font-size: 1.1em; }
+        .project-item-desc { color: var(--text-muted); font-size: 0.9em; }
+        .project-item-cost { font-size: 1em; font-weight: normal; color: var(--text-color); text-align: right; }
+        .project-item-cost .price { font-weight: bold; color: var(--accent-color); font-size: 1.1em; }
+        .remove-item-btn { background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-left: 15px;}
+        #recalculate-prompt { display: none; text-align: center; padding: 15px; background-color: var(--warning-bg); border: 2px dashed var(--warning-border); border-radius: 8px; margin-bottom: 20px;}
+        #recalculate-prompt p { margin: 0 0 10px 0; font-weight: bold; color: var(--text-color); }
+        #additional-costs { margin-top: 20px; border-top: 2px solid var(--border-color); padding-top: 20px; }
+        #grand-total-section { margin-top: 20px; padding: 15px; border: 2px solid var(--accent-color); border-radius: 8px; background-color: var(--info-bg); }
+        .grand-total-row { display: flex; justify-content: space-between; font-size: 1.2em; padding: 5px 0; }
+        .grand-total-row.final { font-size: 1.5em; font-weight: bold; color: var(--accent-color); border-top: 1px solid var(--accent-dark); margin-top: 10px; padding-top: 10px; }
+        .project-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
+        
+        @media (max-width: 600px) {
+            body { padding: 0; } .main-container { margin: 0; border-radius: 0; } .app-body { padding: 15px; }
+            input[type="text"], input[type="number"] { font-size: 16px !important; }
+            .navigation-grid { grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); }
+        }
+        @media print {
+            body, html { background-color: #fff; color: #000; font-size: 12pt; }
+            .no-print, .main-container > header, .main-container > section, #calculator-section, #recalculate-prompt { display: none !important; }
+            .print-area { display: block !important; } .main-container { all: initial; font-family: 'Roboto', sans-serif; }
+            #project-estimate-container { margin: 0; padding: 0; } #project-estimate-container h2 { text-align: center; font-size: 24pt; margin-bottom: 20px; color: #000 !important; }
+            #project-estimate-container ul li { border: 1px solid #ccc; page-break-inside: avoid; }
+            #grand-total-section { border: 2px solid #000; background-color: #f0f0f0 !important; }
+            .project-item-cost .price, .grand-total-row.final {color: #000 !important;}
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header class="app-header no-print">
+            <button id="theme-toggle" class="header-icon">☀️</button>
+            <h1 data-translate-key="app_title"></h1>
+        </header>
+        <section class="language-selector no-print">
+            <button class="lang-button" data-lang="en">English</button>
+            <button class="lang-button" data-lang="es">Español</button>
+            <button class="lang-button" data-lang="zh">中文</button>
+            <button class="lang-button" data-lang="hi">हिन्दी</button>
+        </section>
+        <main class="app-body">
+            <div id="calculator-section" class="no-print">
+                <details class="settings-panel">
+                    <summary data-translate-key="settings_title"></summary>
+                    <div class="settings-content">
+                         <div class="form-row"><span data-translate-key="cost_yard"></span><div class="input-group"><span class="unit">$</span><input type="number" id="cost-yard" min="0" step="0.01"></div></div>
+                         <div class="form-row"><span data-translate-key="cost_paver"></span><div class="input-group"><span class="unit">$</span><input type="number" id="cost-paver" min="0" step="0.01"></div></div>
+                         <div class="form-row"><span data-translate-key="cost_rebar"></span><div class="input-group"><span class="unit">$</span><input type="number" id="cost-rebar" min="0" step="0.01"></div></div>
+                         <div class="form-row"><span data-translate-key="waste_factor"></span><div class="input-group"><span class="unit">%</span><input type="number" id="waste-factor" min="0" step="1"></div></div>
                     </div>
-                </div>
-                
-                <div class="card-body">
-                    <form action="{{ route('patients.update', $patient->autoID) }}" method="POST" id="patientEditForm">
-                        @csrf
-                        @method('PUT')
-                        
-                        <!-- Demographics Section -->
-                        <div class="row mb-5">
-                            <div class="col-12">
-                                <h5 class="text-primary mb-4 border-bottom pb-2">
-                                    <i class="fas fa-user me-2"></i>Demographics
-                                </h5>
-                            </div>
-                            
-                            <!-- Row 1 -->
-                            <div class="col-lg-2 col-md-3 col-6 mb-3">
-                                <label for="patient_id" class="form-label fw-bold">Patient ID</label>
-                                <input type="text" class="form-control bg-light" id="patient_id" value="{{ $patient->autoID }}" readonly>
-                            </div>
-                            
-                            <div class="col-lg-3 col-md-4 col-6 mb-3">
-                                <label for="first_name" class="form-label fw-bold">First Name <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('first_name') is-invalid @enderror" 
-                                       id="first_name" 
-                                       name="first_name" 
-                                       value="{{ old('first_name', $patient->getFirstNameAttribute()) }}"
-                                       required>
-                                @error('first_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-3 col-md-4 col-6 mb-3">
-                                <label for="last_name" class="form-label fw-bold">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('last_name') is-invalid @enderror" 
-                                       id="last_name" 
-                                       name="last_name" 
-                                       value="{{ old('last_name', $patient->getLastNameAttribute()) }}"
-                                       required>
-                                @error('last_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-2 col-md-3 col-6 mb-3">
-                                <label for="date_of_birth" class="form-label fw-bold">Date of Birth</label>
-                                <input type="date" 
-                                       class="form-control @error('date_of_birth') is-invalid @enderror" 
-                                       id="date_of_birth" 
-                                       name="date_of_birth" 
-                                       value="{{ old('date_of_birth', $patient->getDateOfBirthAttribute() ? $patient->getDateOfBirthAttribute()->format('Y-m-d') : '') }}">
-                                @error('date_of_birth')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-2 col-md-3 col-6 mb-3">
-                                <label for="sex" class="form-label fw-bold">Gender</label>
-                                <select class="form-select @error('sex') is-invalid @enderror" id="sex" name="sex">
-                                    <option value="">Select</option>
-                                    <option value="Male" {{ old('sex', $patient->Sex) == 'Male' ? 'selected' : '' }}>Male</option>
-                                    <option value="Female" {{ old('sex', $patient->Sex) == 'Female' ? 'selected' : '' }}>Female</option>
-                                </select>
-                                @error('sex')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <!-- Row 2 -->
-                            <div class="col-lg-3 col-md-4 col-6 mb-3">
-                                <label for="home_phone" class="form-label fw-bold">Phone Number</label>
-                                <input type="tel" 
-                                       class="form-control @error('home_phone') is-invalid @enderror" 
-                                       id="home_phone" 
-                                       name="home_phone" 
-                                       value="{{ old('home_phone', $patient->getHomePhoneAttribute()) }}"
-                                       placeholder="(555) 123-4567">
-                                @error('home_phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-5 col-6 mb-3">
-                                <label for="email" class="form-label fw-bold">Email Address</label>
-                                <input type="email" 
-                                       class="form-control @error('email') is-invalid @enderror" 
-                                       id="email" 
-                                       name="email" 
-                                       value="{{ old('email', $patient->Email) }}"
-                                       placeholder="patient@example.com">
-                                @error('email')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-3 col-md-3 col-6 mb-3">
-                                <label for="insurance" class="form-label fw-bold">Insurance</label>
-                                <select class="form-select @error('insurance') is-invalid @enderror" id="insurance" name="insurance">
-                                    <option value="">Select Insurance</option>
-                                    @foreach($insuranceTypes as $insurance)
-                                        <option value="{{ $insurance }}" {{ old('insurance', $patient->Insurance) == $insurance ? 'selected' : '' }}>
-                                            {{ $insurance }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('insurance')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-2 col-md-3 col-6 mb-3">
-                                <label for="office_number" class="form-label fw-bold">Office Phone</label>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="office_number" 
-                                       name="office_number" 
-                                       value="{{ old('office_number', $patient->{'Office Number'}) }}"
-                                       placeholder="(555) 987-6543">
-                            </div>
-                            
-                            <!-- Row 3 - Address -->
-                            <div class="col-lg-6 col-md-8 col-12 mb-3">
-                                <label for="address" class="form-label fw-bold">Address</label>
-                                <input type="text" 
-                                       class="form-control @error('address') is-invalid @enderror" 
-                                       id="address" 
-                                       name="address" 
-                                       value="{{ old('address', $patient->Address) }}"
-                                       placeholder="123 Main Street">
-                                @error('address')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-3 col-md-4 col-6 mb-3">
-                                <label for="city" class="form-label fw-bold">City</label>
-                                <input type="text" 
-                                       class="form-control @error('city') is-invalid @enderror" 
-                                       id="city" 
-                                       name="city" 
-                                       value="{{ old('city', $patient->City) }}"
-                                       placeholder="New York">
-                                @error('city')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-1 col-md-2 col-3 mb-3">
-                                <label for="state" class="form-label fw-bold">State</label>
-                                <input type="text" 
-                                       class="form-control @error('state') is-invalid @enderror" 
-                                       id="state" 
-                                       name="state" 
-                                       value="{{ old('state', $patient->STATE) }}"
-                                       maxlength="2"
-                                       placeholder="NY">
-                                @error('state')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="col-lg-2 col-md-3 col-3 mb-3">
-                                <label for="zip_code" class="form-label fw-bold">Zip Code</label>
-                                <input type="text" 
-                                       class="form-control @error('zip_code') is-invalid @enderror" 
-                                       id="zip_code" 
-                                       name="zip_code" 
-                                       value="{{ old('zip_code', $patient->{'Zip Code'}) }}"
-                                       placeholder="10001">
-                                @error('zip_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <!-- Eyeglass Prescription Section -->
-                        <div class="row mb-5">
-                            <div class="col-12">
-                                <h5 class="text-primary mb-4 border-bottom pb-2">
-                                    <i class="fas fa-glasses me-2"></i>Eyeglass Prescription
-                                </h5>
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-6 col-12 mb-3">
-                                <label for="doctor" class="form-label fw-bold">Doctor</label>
-                                <select class="form-select" id="doctor" name="doctor">
-                                    <option value="">Select Doctor</option>
-                                    @foreach($doctors as $id => $name)
-                                        <option value="{{ $name }}" {{ old('doctor', $patient->Doctor) == $name ? 'selected' : '' }}>
-                                            {{ $name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-6 col-12 mb-3">
-                                <label for="exam_date" class="form-label fw-bold">Exam Date</label>
-                                <input type="date" class="form-control" id="exam_date" name="exam_date" 
-                                       value="{{ old('exam_date', $patient->{'Exam Date'} ? \Carbon\Carbon::parse($patient->{'Exam Date'})->format('Y-m-d') : '') }}">
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-12 col-12 mb-3 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="copyODtoOS_EG">
-                                    <i class="fas fa-copy me-1"></i>Copy OD to OS
-                                </button>
-                            </div>
-
-                            <!-- EG Prescription Table -->
-                            <div class="col-12">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-sm">
-                                        <thead class="table-primary">
-                                            <tr>
-                                                <th width="8%">Eye</th>
-                                                <th width="12%">SPH</th>
-                                                <th width="12%">CYL</th>
-                                                <th width="10%">AXIS</th>
-                                                <th width="10%">ADD</th>
-                                                <th width="8%">PD</th>
-                                                <th width="10%">DV</th>
-                                                <th width="10%">NV</th>
-                                                <th width="8%">HGT</th>
-                                                <th width="12%">PRISM</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="table-light align-middle text-center"><strong>OD</strong></td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_sph">
-                                                        <option value="">SPH</option>
-                                                        @for($i = -20; $i <= 20; $i += 0.25)
-                                                            <option value="{{ sprintf('%+.2f', $i) }}" {{ ($patient->ODSPH ?? '') == sprintf('%+.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%+.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_cyl">
-                                                        <option value="">CYL</option>
-                                                        @for($i = 0; $i >= -10; $i -= 0.25)
-                                                            <option value="{{ sprintf('%.2f', $i) }}" {{ ($patient->ODCYL ?? '') == sprintf('%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_axis">
-                                                        <option value="">AXIS</option>
-                                                        @for($i = 1; $i <= 180; $i++)
-                                                            <option value="{{ $i }}" {{ ($patient->ODAXIS ?? '') == $i ? 'selected' : '' }}>
-                                                                {{ $i }}°
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_add">
-                                                        <option value="">ADD</option>
-                                                        @for($i = 0.75; $i <= 3.50; $i += 0.25)
-                                                            <option value="{{ sprintf('+%.2f', $i) }}" {{ ($patient->ODADD ?? '') == sprintf('+%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('+%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_pd" placeholder="mm" value="{{ old('od_pd', $patient->ODPD) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_dv" placeholder="20/20" value="{{ old('od_dv', $patient->ODDV) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_nv" placeholder="20/20" value="{{ old('od_nv', $patient->ODNV) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_hgt" placeholder="mm" value="{{ old('od_hgt', $patient->ODHGT) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_prism" placeholder="Δ" value="{{ old('od_prism', $patient->ODPrism) }}"></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="table-light align-middle text-center"><strong>OS</strong></td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_sph">
-                                                        <option value="">SPH</option>
-                                                        @for($i = -20; $i <= 20; $i += 0.25)
-                                                            <option value="{{ sprintf('%+.2f', $i) }}" {{ ($patient->OSSPH ?? '') == sprintf('%+.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%+.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_cyl">
-                                                        <option value="">CYL</option>
-                                                        @for($i = 0; $i >= -10; $i -= 0.25)
-                                                            <option value="{{ sprintf('%.2f', $i) }}" {{ ($patient->OSCYL ?? '') == sprintf('%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_axis">
-                                                        <option value="">AXIS</option>
-                                                        @for($i = 1; $i <= 180; $i++)
-                                                            <option value="{{ $i }}" {{ ($patient->OSAXIS ?? '') == $i ? 'selected' : '' }}>
-                                                                {{ $i }}°
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_add">
-                                                        <option value="">ADD</option>
-                                                        @for($i = 0.75; $i <= 3.50; $i += 0.25)
-                                                            <option value="{{ sprintf('+%.2f', $i) }}" {{ ($patient->OSADD ?? '') == sprintf('+%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('+%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_pd" placeholder="mm" value="{{ old('os_pd', $patient->OSPD) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_dv" placeholder="20/20" value="{{ old('os_dv', $patient->OSDV) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_nv" placeholder="20/20" value="{{ old('os_nv', $patient->OSNV) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_hgt" placeholder="mm" value="{{ old('os_hgt', $patient->OSHGT) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_prism" placeholder="Δ" value="{{ old('os_prism', $patient->OSPrism) }}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Lens Prescription Section -->
-                        <div class="row mb-5">
-                            <div class="col-12">
-                                <h5 class="text-primary mb-4 border-bottom pb-2">
-                                    <i class="fas fa-circle me-2"></i>Contact Lens Prescription
-                                </h5>
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-6 col-12 mb-3">
-                                <label for="doctor_cl" class="form-label fw-bold">CL Doctor</label>
-                                <select class="form-select" id="doctor_cl" name="doctor_cl">
-                                    <option value="">Select CL Doctor</option>
-                                    @foreach($doctorsCL as $id => $name)
-                                        <option value="{{ $name }}" {{ old('doctor_cl', $patient->DoctorCL) == $name ? 'selected' : '' }}>
-                                            {{ $name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-6 col-12 mb-3">
-                                <label for="exam_date_cl" class="form-label fw-bold">CL Exam Date</label>
-                                <input type="date" class="form-control" id="exam_date_cl" name="exam_date_cl" 
-                                       value="{{ old('exam_date_cl', $patient->ExamDateCL ? \Carbon\Carbon::parse($patient->ExamDateCL)->format('Y-m-d') : '') }}">
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-12 col-12 mb-3 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-info btn-sm w-100" id="copyODtoOS_CL">
-                                    <i class="fas fa-copy me-1"></i>Copy OD to OS (CL)
-                                </button>
-                            </div>
-
-                            <!-- Contact Lens Types -->
-                            <div class="col-lg-6 col-md-6 col-12 mb-3">
-                                <label for="lens_type_cl" class="form-label fw-bold">OD (Right Eye) Lens Type</label>
-                                <select class="form-select" id="lens_type_cl" name="lens_type_cl">
-                                    <option value="">Select OD Lens Type</option>
-                                    @foreach($contactLenses as $lens)
-                                        <option value="{{ $lens->Brand }}" {{ old('lens_type_cl', $patient->LensTypeCL) == $lens->Brand ? 'selected' : '' }}>
-                                            {{ $lens->Brand }} ({{ $lens->Days }} days) - ${{ $lens->Price }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            
-                            <div class="col-lg-6 col-md-6 col-12 mb-3">
-                                <label for="lens_type_cl1" class="form-label fw-bold">OS (Left Eye) Lens Type</label>
-                                <select class="form-select" id="lens_type_cl1" name="lens_type_cl1">
-                                    <option value="">Select OS Lens Type</option>
-                                    @foreach($contactLenses as $lens)
-                                        <option value="{{ $lens->Brand }}" {{ old('lens_type_cl1', $patient->LensTypeCL1) == $lens->Brand ? 'selected' : '' }}>
-                                            {{ $lens->Brand }} ({{ $lens->Days }} days) - ${{ $lens->Price }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- CL Prescription Table -->
-                            <div class="col-12">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-sm">
-                                        <thead class="table-info">
-                                            <tr>
-                                                <th width="10%">Eye</th>
-                                                <th width="15%">SPH</th>
-                                                <th width="15%">CYL</th>
-                                                <th width="12%">AXIS</th>
-                                                <th width="12%">ADD</th>
-                                                <th width="18%">BC</th>
-                                                <th width="18%">DIAM</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="table-light align-middle text-center"><strong>OD</strong></td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_sph_cl">
-                                                        <option value="">SPH</option>
-                                                        @for($i = -20; $i <= 20; $i += 0.25)
-                                                            <option value="{{ sprintf('%+.2f', $i) }}" {{ ($patient->ODSPHCL ?? '') == sprintf('%+.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%+.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_cyl_cl">
-                                                        <option value="">CYL</option>
-                                                        @for($i = 0; $i >= -10; $i -= 0.25)
-                                                            <option value="{{ sprintf('%.2f', $i) }}" {{ ($patient->ODCYLCL ?? '') == sprintf('%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_axis_cl">
-                                                        <option value="">AXIS</option>
-                                                        @for($i = 1; $i <= 180; $i++)
-                                                            <option value="{{ $i }}" {{ ($patient->ODAXISCL ?? '') == $i ? 'selected' : '' }}>
-                                                                {{ $i }}°
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="od_add_cl">
-                                                        <option value="">ADD</option>
-                                                        @for($i = 0.75; $i <= 3.50; $i += 0.25)
-                                                            <option value="{{ sprintf('+%.2f', $i) }}" {{ ($patient->ODADDCL ?? '') == sprintf('+%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('+%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_bc_cl" placeholder="8.4" value="{{ old('od_bc_cl', $patient->ODBCCL) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="od_diam_cl" placeholder="14.0" value="{{ old('od_diam_cl', $patient->ODDIAMCL) }}"></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="table-light align-middle text-center"><strong>OS</strong></td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_sph_cl">
-                                                        <option value="">SPH</option>
-                                                        @for($i = -20; $i <= 20; $i += 0.25)
-                                                            <option value="{{ sprintf('%+.2f', $i) }}" {{ ($patient->OSSPHCL ?? '') == sprintf('%+.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%+.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_cyl_cl">
-                                                        <option value="">CYL</option>
-                                                        @for($i = 0; $i >= -10; $i -= 0.25)
-                                                            <option value="{{ sprintf('%.2f', $i) }}" {{ ($patient->OSCYLCL ?? '') == sprintf('%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_axis_cl">
-                                                        <option value="">AXIS</option>
-                                                        @for($i = 1; $i <= 180; $i++)
-                                                            <option value="{{ $i }}" {{ ($patient->OSAXISCL ?? '') == $i ? 'selected' : '' }}>
-                                                                {{ $i }}°
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="os_add_cl">
-                                                        <option value="">ADD</option>
-                                                        @for($i = 0.75; $i <= 3.50; $i += 0.25)
-                                                            <option value="{{ sprintf('+%.2f', $i) }}" {{ ($patient->OSADDCL ?? '') == sprintf('+%.2f', $i) ? 'selected' : '' }}>
-                                                                {{ sprintf('+%.2f', $i) }}
-                                                            </option>
-                                                        @endfor
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_bc_cl" placeholder="8.4" value="{{ old('os_bc_cl', $patient->OSBCCL) }}"></td>
-                                                <td><input type="text" class="form-control form-control-sm text-center" name="os_diam_cl" placeholder="14.0" value="{{ old('os_diam_cl', $patient->OSDIAMCL) }}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notes Section -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h5 class="text-primary mb-3 border-bottom pb-2">
-                                    <i class="fas fa-sticky-note me-2"></i>Notes
-                                </h5>
-                                <textarea class="form-control" name="notes" rows="4" placeholder="Patient notes, special instructions, or observations...">{{ old('notes', $patient->Notes) }}</textarea>
-                            </div>
-                        </div>
-
-                        <!-- Form Actions -->
-                        <div class="row">
-                            <div class="col-12">
-                                <hr class="my-4">
-                                <div class="d-flex justify-content-between flex-wrap gap-3">
-                                    <a href="{{ route('patients.show', $patient->autoID) }}" class="btn btn-outline-secondary btn-lg">
-                                        <i class="fas fa-times me-2"></i>Cancel
-                                    </a>
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        <i class="fas fa-save me-2"></i>Save Changes
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                </details>
+                <nav id="navigation-grid" class="navigation-grid"></nav>
+                <div id="view-container"></div>
             </div>
-        </div>
+            <div id="project-estimate-container" class="print-area"></div>
+        </main>
     </div>
-</div>
-
-<!-- Email Confirmation Modal -->
-<div class="modal fade" id="emailModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-envelope me-2"></i>Email Prescriptions</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Send prescriptions to:</strong></p>
-                <p class="text-primary"><i class="fas fa-envelope me-2"></i>{{ $patient->Email ?: 'No email on file' }}</p>
-                <p>This will send both Eyeglass and Contact Lens prescriptions as PDF attachments.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="confirmEmailSend()">
-                    <i class="fas fa-paper-plane me-2"></i>Send Email
-                </button>
-            </div>
+    
+    <template id="calculator-view-template">
+        <div class="app-view form-group">
+            <div class="form-inputs"></div>
+            <button class="action-button calculate-button" data-translate-key="calculate_button">Calculate</button>
+            <div class="error-message"></div>
+            <div class="results-container" style="display:none;"></div>
         </div>
-    </div>
-</div>
-@endsection
+    </template>
 
-@push('styles')
-<style>
-/* iPad-optimized responsive styles */
-@media (min-width: 768px) and (max-width: 1024px) {
-    .container-fluid {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-    
-    .form-control, .form-select {
-        font-size: 16px; /* Prevents zoom on iOS */
-        padding: 0.6rem 0.75rem;
-    }
-    
-    .table-responsive {
-        font-size: 14px;
-    }
-    
-    .btn-group {
-        gap: 0.25rem;
-    }
-}
-
-/* Consistent field sizing */
-.form-control, .form-select {
-    height: 42px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #0891b2;
-    box-shadow: 0 0 0 0.2rem rgba(8, 145, 178, 0.25);
-}
-
-.form-label.fw-bold {
-    font-size: 0.9rem;
-    color: #495057;
-    margin-bottom: 0.5rem;
-}
-
-/* Table improvements */
-.table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    font-size: 0.85rem;
-    border: 1px solid #dee2e6;
-    vertical-align: middle;
-    text-align: center;
-}
-
-.table td {
-    vertical-align: middle;
-    border: 1px solid #dee2e6;
-    padding: 0.5rem 0.25rem;
-}
-
-.form-select-sm {
-    font-size: 0.8rem;
-    padding: 0.25rem 0.5rem;
-    height: auto;
-}
-
-/* Section styling */
-.border-bottom {
-    border-color: #0891b2 !important;
-    border-width: 2px !important;
-}
-
-/* Button improvements */
-.btn {
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.1rem;
-}
-
-/* Card styling */
-.card {
-    border: none;
-    border-radius: 12px;
-}
-
-.card-header {
-    border-radius: 12px 12px 0 0 !important;
-    background: linear-gradient(135deg, #0891b2, #06b6d4);
-}
-
-/* Mobile optimizations */
-@media (max-width: 767px) {
-    .btn-group {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .btn-group .btn {
-        margin-bottom: 0.25rem;
-    }
-    
-    .table-responsive {
-        font-size: 12px;
-    }
-    
-    .form-select-sm {
-        font-size: 12px;
-    }
-}
-
-/* Loading spinner */
-.loading-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-</style>
-@endpush
-
-@push('scripts')
 <script>
-$(document).ready(function() {
-    // Format phone numbers
-    $('#home_phone, #office_number').on('input', function() {
-        let value = $(this).val().replace(/\D/g, '');
-        if (value.length >= 6) {
-            value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
-        } else if (value.length >= 3) {
-            value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
-        }
-        $(this).val(value);
-    });
-
-    // Auto-capitalize names
-    $('#first_name, #last_name, #city').on('input', function() {
-        let value = $(this).val();
-        $(this).val(value.charAt(0).toUpperCase() + value.slice(1).toLowerCase());
-    });
-
-    // Auto-uppercase state
-    $('#state').on('input', function() {
-        $(this).val($(this).val().toUpperCase());
-    });
-
-    // Copy OD to OS for eyeglasses
-    $('#copyODtoOS_EG').on('click', function() {
-        $('select[name="os_sph"]').val($('select[name="od_sph"]').val());
-        $('select[name="os_cyl"]').val($('select[name="od_cyl"]').val());
-        $('select[name="os_axis"]').val($('select[name="od_axis"]').val());
-        $('select[name="os_add"]').val($('select[name="od_add"]').val());
-        $('input[name="os_pd"]').val($('input[name="od_pd"]').val());
-        $('input[name="os_dv"]').val($('input[name="od_dv"]').val());
-        $('input[name="os_nv"]').val($('input[name="od_nv"]').val());
-        $('input[name="os_hgt"]').val($('input[name="od_hgt"]').val());
-        $('input[name="os_prism"]').val($('input[name="od_prism"]').val());
-        
-        // Visual feedback
-        $(this).html('<i class="fas fa-check me-1"></i>Copied!').removeClass('btn-outline-primary').addClass('btn-success');
-        setTimeout(() => {
-            $(this).html('<i class="fas fa-copy me-1"></i>Copy OD to OS').removeClass('btn-success').addClass('btn-outline-primary');
-        }, 2000);
-    });
-
-    // Copy OD to OS for contact lenses
-    $('#copyODtoOS_CL').on('click', function() {
-        $('select[name="os_sph_cl"]').val($('select[name="od_sph_cl"]').val());
-        $('select[name="os_cyl_cl"]').val($('select[name="od_cyl_cl"]').val());
-        $('select[name="os_axis_cl"]').val($('select[name="od_axis_cl"]').val());
-        $('select[name="os_add_cl"]').val($('select[name="od_add_cl"]').val());
-        $('input[name="os_bc_cl"]').val($('input[name="od_bc_cl"]').val());
-        $('input[name="os_diam_cl"]').val($('input[name="od_diam_cl"]').val());
-        $('#lens_type_cl1').val($('#lens_type_cl').val());
-        
-        // Visual feedback
-        $(this).html('<i class="fas fa-check me-1"></i>Copied!').removeClass('btn-outline-info').addClass('btn-success');
-        setTimeout(() => {
-            $(this).html('<i class="fas fa-copy me-1"></i>Copy OD to OS (CL)').removeClass('btn-success').addClass('btn-outline-info');
-        }, 2000);
-    });
-
-    // Form submission loading state
-    $('#patientEditForm').submit(function() {
-        $(this).find('button[type="submit"]').html('<div class="loading-spinner me-2"></div>Saving...').prop('disabled', true);
-    });
-
-    // Smooth scroll to sections
-    $('a[href^="#"]').on('click', function(e) {
-        e.preventDefault();
-        const target = $($(this).attr('href'));
-        if (target.length) {
-            $('html, body').animate({
-                scrollTop: target.offset().top - 100
-            }, 500);
-        }
-    });
-});
-
-function emailPrescriptions() {
-    @if($patient->Email)
-        $('#emailModal').modal('show');
-    @else
-        alert('No email address on file for this patient. Please add an email address first.');
-    @endif
-}
-
-function confirmEmailSend() {
-    $('#emailModal').modal('hide');
+document.addEventListener('DOMContentLoaded', () => {
+    let isInitialLoad = true;
+    const CUBIC_FEET_IN_YARD = 27, PI = Math.PI;
+    const DOM = {
+        viewContainer: document.getElementById('view-container'), navGrid: document.getElementById('navigation-grid'),
+        projectEstimateContainer: document.getElementById('project-estimate-container'),
+        themeToggle: document.getElementById('theme-toggle'),
+        wasteFactorInput: document.getElementById('waste-factor'), costYardInput: document.getElementById('cost-yard'),
+        costPaverInput: document.getElementById('cost-paver'), costRebarInput: document.getElementById('cost-rebar'),
+    };
     
-    // Show loading overlay
-    $('body').append(`
-        <div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.7); z-index: 9999;">
-            <div class="text-center text-white">
-                <div class="loading-spinner mb-3" style="width: 40px; height: 40px; border-width: 4px;"></div>
-                <h5>Sending prescriptions...</h5>
-                <p class="mb-0">Please wait while we prepare and send your prescriptions.</p>
+    let state = {
+        lang: 'en', projectItems: [],
+        settings: { waste: 10, costYard: 175.00, costPaver: 2.50, costRebar: 12.00 },
+        additionalCosts: { labor: 0, permits: 0, misc: 0 },
+        ui: { activeView: 'slab-footing', isDark: window.matchMedia('(prefers-color-scheme: dark)').matches, isEstimateDirty: false },
+        latestCalcResults: {}
+    };
+
+    const translations = {
+        en: { app_title: " DAILYRIG.COM - Concrete Estimator", settings_title: "Material Costs & Waste", waste_factor: "Waste Factor (%)", cost_yard: "Cost per yd³ (Concrete/Base)", cost_paver: "Cost per Paver", cost_rebar: "Cost per Rebar (10ft)", clear_button: "Clear Project", print_button: "Print / PDF", copy_button: "Copy Text", copied_button: "Copied!", project_title: "Project Estimate", recalculate_prompt: "⚠️ Settings have changed. The current estimate may be inaccurate.", recalculate_button: "Recalculate Estimate With New Costs", grand_total_title: "Final Cost Summary", item_name: "Item Name (e.g., Patio Slab)", add_to_project: "Add to Estimate", labor: "Labor Charges", permits: "Permit Fees", misc: "Misc. Charges", materials_subtotal: "Materials Subtotal", grand_total: "Grand Total", feet: "ft", inches: "in", slab_footing_title: "Slab/Footing", column_title: "Column/Hole", circ_slab_title: "Circular Slab", stairs_title: "Stairs", tube_bell_title: "Tube w/ Bell", trapezoid_footing_title: "Trapezoid Footing", pavers_title: "Pavers & Base", rebar_title: "Rebar Grid", length: "Length", width: "Width", thickness: "Thickness", diameter: "Diameter", depth_height: "Depth/Height", num_steps: "No. of Steps", tread_depth: "Tread Depth", riser_height: "Riser Height", stair_width: "Stair Width", waist_thick: "Waist Thick.", tube_diameter: "Tube Diameter", bell_diameter: "Bell Diameter", bell_thickness: "Bell Thickness", top_width: "Top Width", bottom_width: "Bottom Width", area_length: "Area Length", area_width: "Area Width", paver_length: "Paver Length", paver_width: "Paver Width", base_depth: "Base Depth", slab_length: "Slab Length", slab_width: "Slab Width", rebar_spacing: "Rebar Spacing", project_empty: "Your estimate is empty. Add items from a calculator.", error_invalid_input: "Please enter valid, positive numbers."},
+        es: { app_title: "Estimador de Proyectos Pro", settings_title: "Costos de Material y Desperdicio", waste_factor: "Factor de Desperdicio (%)", cost_yard: "Costo por yd³ (Concreto/Base)", cost_paver: "Costo por Adoquín", cost_rebar: "Costo por Varilla (10ft)", clear_button: "Limpiar Proyecto", print_button: "Imprimir / PDF", copy_button: "Copiar Texto", copied_button: "¡Copiado!", project_title: "Estimación del Proyecto", recalculate_prompt: "⚠️ La configuración ha cambiado. La estimación actual puede ser inexacta.", recalculate_button: "Recalcular Estimación con Nuevos Costos", grand_total_title: "Resumen de Costo Final", item_name: "Nombre del Artículo (ej. Losa de Patio)", add_to_project: "Añadir a la Estimación", labor: "Cargos de Mano de Obra", permits: "Cargos de Permisos", misc: "Cargos Varios", materials_subtotal: "Subtotal de Materiales", grand_total: "Total General", feet: "ft", inches: "in", slab_footing_title: "Losa/Zapata", column_title: "Columna/Hoyo", circ_slab_title: "Losa Circular", stairs_title: "Escaleras", tube_bell_title: "Tubo con Campana", trapezoid_footing_title: "Zapata Trapezoidal", pavers_title: "Adoquines y Base", rebar_title: "Malla de Varilla", length: "Longitud", width: "Ancho", thickness: "Espesor", diameter: "Diámetro", depth_height: "Profundidad/Altura", num_steps: "Nº de Escalones", tread_depth: "Huella", riser_height: "Contrahuella", stair_width: "Ancho de Escalera", waist_thick: "Espesor de Losa", tube_diameter: "Diámetro del Tubo", bell_diameter: "Diámetro de Campana", bell_thickness: "Espesor de Campana", top_width: "Ancho Superior", bottom_width: "Ancho Inferior", area_length: "Largo del Área", area_width: "Ancho del Área", paver_length: "Largo del Adoquín", paver_width: "Ancho del Adoquín", base_depth: "Profundidad de Base", slab_length: "Largo de Losa", slab_width: "Ancho de Losa", rebar_spacing: "Espaciado de Varilla", project_empty: "Su estimación está vacía. Agregue artículos desde una calculadora.", error_invalid_input: "Por favor, ingrese números válidos y positivos."},
+        zh: { app_title: "专业项目估算器", settings_title: "材料成本与损耗", waste_factor: "损耗系数 (%)", cost_yard: "每立方码成本 (混凝土/基层)", cost_paver: "每块铺路砖成本", cost_rebar: "每根钢筋成本 (10英尺)", clear_button: "清除项目", print_button: "打印 / PDF", copy_button: "复制文本", copied_button: "已复制!", project_title: "项目估算", recalculate_prompt: "⚠️ 设置已更改。当前估算可能不准确。", recalculate_button: "使用新成本重新计算估算", grand_total_title: "最终成本摘要", item_name: "项目名称 (例如, 庭院板)", add_to_project: "添加到估算", labor: "人工费", permits: "许可证费用", misc: "杂项费用", materials_subtotal: "材料小计", grand_total: "总计", feet: "英尺", inches: "英寸", slab_footing_title: "板/基础", column_title: "圆柱/孔", circ_slab_title: "圆形板", stairs_title: "楼梯", tube_bell_title: "带钟脚的管", trapezoid_footing_title: "梯形基础", pavers_title: "铺路砖和基层", rebar_title: "钢筋网", length: "长度", width: "宽度", thickness: "厚度", diameter: "直径", depth_height: "深度/高度", num_steps: "台阶数", tread_depth: "踏板深度", riser_height: "踢板高度", stair_width: "楼梯宽度", waist_thick: "梯腰厚度", tube_diameter: "管直径", bell_diameter: "钟脚直径", bell_thickness: "钟脚厚度", top_width: "顶部宽度", bottom_width: "底部宽度", area_length: "区域长度", area_width: "区域宽度", paver_length: "铺路砖长度", paver_width: "铺路砖宽度", base_depth: "基层深度", slab_length: "板长度", slab_width: "板宽度", rebar_spacing: "钢筋间距", project_empty: "您的估算是空的。请从计算器添加项目。", error_invalid_input: "请输入有效的正数。"},
+        hi: { app_title: "प्रो प्रोजेक्ट एस्टिमेटर", settings_title: "सामग्री लागत और अपशिष्ट", waste_factor: "अपशिष्ट कारक (%)", cost_yard: "प्रति yd³ लागत", cost_paver: "प्रति पेवर लागत", cost_rebar: "प्रति रिबार लागत", clear_button: "प्रोजेक्ट साफ़ करें", print_button: "प्रिंट / पीडीएफ", copy_button: "टेक्स्ट कॉपी करें", copied_button: "कॉपी किया गया!", project_title: "प्रोजेक्ट अनुमान", recalculate_prompt: "⚠️ सेटिंग्स बदल गई हैं। वर्तमान अनुमान गलत हो सकता है।", recalculate_button: "नई लागतों के साथ अनुमान की फिर से गणना करें", grand_total_title: "अंतिम लागत सारांश", item_name: "आइटम का नाम", add_to_project: "अनुमान में जोड़ें", labor: "श्रम शुल्क", permits: "परमिट शुल्क", misc: "विविध शुल्क", materials_subtotal: "सामग्री उप-कुल", grand_total: "कुल योग", feet: "फीट", inches: "इंच", slab_footing_title: "स्लैब/फुटिंग", column_title: "कॉलम/होल", circ_slab_title: "गोल स्लैब", stairs_title: "सीढ़ियाँ", tube_bell_title: "ट्यूब और बेल", trapezoid_footing_title: "ट्रेपेज़ॉइड फुटिंग", pavers_title: "पेवर्स और बेस", rebar_title: "रिबार ग्रिड", length: "लंबाई", width: "चौड़ाई", thickness: "मोटाई", diameter: "व्यास", depth_height: "गहराई/ऊंचाई", num_steps: "सीढ़ियों की संख्या", tread_depth: "ट्रेड गहराई", riser_height: "रिसर ऊंचाई", stair_width: "सीढ़ी चौड़ाई", waist_thick: "कमर मोटाई", tube_diameter: "ट्यूब व्यास", bell_diameter: "बेल व्यास", bell_thickness: "बेल मोटाई", top_width: "ऊपरी चौड़ाई", bottom_width: "निचली चौड़ाई", area_length: "क्षेत्र की लंबाई", area_width: "क्षेत्र की चौड़ाई", paver_length: "पेवर लंबाई", paver_width: "पेवर चौड़ाई", base_depth: "बेस गहराई", slab_length: "स्लैब लंबाई", slab_width: "स्लैब चौड़ाई", rebar_spacing: "रिबार स्पेसिंग", project_empty: "आपका अनुमान खाली है।", error_invalid_input: "कृपया मान्य, सकारात्मक संख्याएँ दर्ज करें।"}
+    };
+
+    const calculators = {
+        'slab-footing': { titleKey: 'slab_footing_title', type: 'concrete', icon: `<svg viewBox="0 0 24 24"><path d="M20.7,5.3l-2.1-2.1c-0.2-0.2-0.5-0.2-0.7,0L3.3,17.7C3.1,17.9,3,18.2,3,18.5V21h2.5c0.3,0,0.6-0.1,0.8-0.3l14.4-14.4 C20.9,6,20.9,5.5,20.7,5.3z M6.6,19H5v-1.6l10-10l1.6,1.6L6.6,19z"/></svg>`, inputs: [{name: 'length', type: 'ft-in'}, {name: 'width', type: 'ft-in'}, {name: 'thickness', type: 'in'}], calculate: v => ({ volFt3: getVal(v, 'length') * getVal(v, 'width') * (getVal(v, 'thickness')/12) }) },
+        'column': { titleKey: 'column_title', type: 'concrete', icon: `<svg viewBox="0 0 24 24"><path d="M14,2H10C9.4,2,9,2.4,9,3v18c0,0.6,0.4,1,1,1h4c0.6,0,1-0.4,1-1V3C15,2.4,14.6,2,14,2z"/></svg>`, inputs: [{name: 'diameter', type: 'in'}, {name: 'depth_height', type: 'ft-in'}], calculate: v => ({ volFt3: PI * Math.pow(getVal(v, 'diameter')/2/12, 2) * getVal(v,'depth_height') }) },
+        'circ-slab': { titleKey: 'circ_slab_title', type: 'concrete', icon: `<svg viewBox="0 0 24 24"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8 S16.4,20,12,20z"/></svg>`, inputs: [{name: 'diameter', type: 'ft-in'}, {name: 'thickness', type: 'in'}], calculate: v => ({ volFt3: PI * Math.pow(getVal(v, 'diameter')/2, 2) * (getVal(v, 'thickness')/12) }) },
+        'stairs': { titleKey: 'stairs_title', type: 'concrete', icon: `<svg viewBox="0 0 24 24"><path d="M21,4H3C2.4,4,2,4.4,2,5v2c0,0.6,0.4,1,1,1h4v3H3c-0.6,0-1,0.4-1,1v2c0,0.6,0.4,1,1,1h4v3H3c-0.6,0-1,0.4-1,1v2 c0,0.6,0.4,1,1,1h18c0.6,0,1-0.4,1-1V5C22,4.4,21.6,4,21,4z"/></svg>`, inputs: [{name: 'num_steps', type: 'num'}, {name: 'stair_width', type: 'ft-in'}, {name: 'tread_depth', type: 'in'}, {name: 'riser_height', type: 'in'}, {name: 'waist_thick', type: 'in'}], calculate: v => { const n=getVal(v,'num_steps'), t=getVal(v,'tread_depth')/12, r=getVal(v,'riser_height')/12, w=getVal(v,'stair_width'), a=getVal(v,'waist_thick')/12; const triangularVolume=n*(.5*t*r*w); const slabLength=Math.sqrt(Math.pow(n*t,2)+Math.pow(n*r,2)); return { volFt3: triangularVolume+(slabLength*w*a) }; }},
+        'tube-bell': { titleKey: 'tube_bell_title', type: 'concrete', icon: `<svg viewBox="0 0 24 24"><path d="M14,2h-4C9.4,2,9,2.4,9,3v12.1c-1.2,0.4-2,1.5-2,2.9c0,1.7,1.3,3,3,3s3-1.3,3-3c0-1.4-0.8-2.5-2-2.9V3 C15,2.4,14.6,2,14,2z M12,20c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S12.6,20,12,20z"/></svg>`, inputs: [{name: 'tube_diameter', type: 'in'}, {name: 'depth_height', type: 'ft-in'}, {name: 'bell_diameter', type: 'in'}, {name: 'bell_thickness', type: 'in'}], calculate: v => { const tubeR = getVal(v, 'tube_diameter')/2/12, bellR = getVal(v, 'bell_diameter')/2/12, bellH = getVal(v, 'bell_thickness')/12, tubeH = getVal(v, 'depth_height'); const volTube = PI * tubeR * tubeR * tubeH; const volBell = PI * bellH / 3 * (bellR*bellR + bellR*tubeR + tubeR*tubeR); return { volFt3: volTube + volBell }; }},
+        'trapezoid-footing': { titleKey: 'trapezoid_footing_title', type: 'concrete', icon: `<svg viewBox="0 0 24 24"><path d="M2.2,6h19.6c0.4,0,0.7-0.5,0.5-0.8l-2.8-5C19.3,0,18.9,0,18.7,0H5.3 C5.1,0,4.7,0.2,4.5,0.5l-2.8,5C1.5,5.5,1.8,6,2.2,6z M4,19c-1.1,0-2-0.9-2-2V8h20v9c0,1.1-0.9,2-2,2H4z"/></svg>`, inputs: [{name: 'length', type: 'ft-in'}, {name: 'top_width', type: 'in'}, {name: 'bottom_width', type: 'ft-in'}, {name: 'depth_height', type: 'in'}], calculate: v => ({ volFt3: getVal(v,'length') * (getVal(v,'depth_height')/12) * ( (getVal(v,'top_width')/12 + getVal(v,'bottom_width')) / 2) }) },
+        'pavers': { titleKey: 'pavers_title', type: 'paver', icon: `<svg viewBox="0 0 24 24"><path d="M4,11h6V5H4V11z M4,18h6v-6H4V18z M11,18h6v-6h-6V18z M18,18h6v-6h-6V18z M11,11h6V5h-6V11z M18,5v6h6V5H18z"/></svg>`, inputs: [{name: 'area_length', type: 'ft-in'}, {name: 'area_width', type: 'ft-in'}, {name: 'paver_length', type: 'in'}, {name: 'paver_width', type: 'in'}, {name: 'base_depth', type: 'in'}], calculate: v => { const area = getVal(v, 'area_length') * getVal(v, 'area_width'); const paverArea = (getVal(v, 'paver_length')/12) * (getVal(v, 'paver_width')/12); if(paverArea === 0) return { error: true }; return { numPavers: Math.ceil(area / paverArea), baseVolFt3: area * (getVal(v, 'base_depth')/12) }; }},
+        'rebar': { titleKey: 'rebar_title', type: 'rebar', icon: `<svg viewBox="0 0 24 24"><path d="M4,8h16v2H4V8z M4,14h16v2H4V14z M8,4h2v16H8V4z M14,4h2v16h-2V4z"/></svg>`, inputs: [{name: 'slab_length', type: 'ft-in'}, {name: 'slab_width', type: 'ft-in'}, {name: 'rebar_spacing', type: 'in'}], calculate: v => { const len = getVal(v, 'slab_length'), wid = getVal(v, 'slab_width'), spacing = getVal(v, 'rebar_spacing')/12; if(spacing === 0) return { error: true }; const numLengthwise = Math.ceil(wid/spacing) + 1, numWidthwise = Math.ceil(len/spacing) + 1; return { numRebars: Math.ceil(((numLengthwise * len) + (numWidthwise * wid)) / 10 * 1.1) }; }},
+    };
+    
+    function saveState() { localStorage.setItem('proEstimatorState', JSON.stringify(state)); }
+    function loadState() {
+        const savedState = localStorage.getItem('proEstimatorState');
+        if (savedState) {
+            const parsedState = JSON.parse(savedState);
+            const { ui, ...rest } = parsedState;
+            state = { ...state, ...rest, ui: { ...state.ui, ...ui, isEstimateDirty: false } };
+        }
+    }
+    
+    function initializeApp() {
+        loadState();
+        const template = document.getElementById('calculator-view-template');
+        Object.entries(calculators).forEach(([id, config]) => {
+            DOM.navGrid.innerHTML += `<button class="nav-button" data-view-id="${id}">${config.icon}<span data-translate-key="${config.titleKey}"></span></button>`;
+            const viewClone = template.content.cloneNode(true).firstElementChild; viewClone.id = id;
+            const inputsContainer = viewClone.querySelector('.form-inputs');
+            const inputsHTML = config.inputs.map(i => {
+                const label = `<span data-translate-key="${i.name}"></span>`;
+                let inputGroupHTML;
+                if (i.type === 'ft-in') {
+                    inputGroupHTML = `<div class="input-group ft-in-group"><input type="number" name="${i.name}-ft" min="0" step="1"><span class="unit">ft</span><input type="number" name="${i.name}-in" min="0" max="11.99" step="any"><span class="unit">in</span></div>`;
+                } else {
+                    inputGroupHTML = `<div class="input-group"><input type="number" name="${i.name}" min="0" step="any"><span class="unit">${i.type === 'num' ? '' : 'in'}</span></div>`;
+                }
+                return `<div class="form-row">${label}${inputGroupHTML}</div>`;
+            }).join('');
+            inputsContainer.innerHTML = inputsHTML;
+            DOM.viewContainer.appendChild(viewClone);
+            viewClone.querySelector('.calculate-button').addEventListener('click', () => handleCalculate(viewClone, config, id));
+        });
+        attachEventListeners(); updateSettingsUI(); applyTheme();
+        renderProjectEstimate();
+        isInitialLoad = false;
+    }
+
+    function attachEventListeners() {
+        DOM.navGrid.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', e => showView(e.currentTarget.dataset.viewId)));
+        document.querySelectorAll('.lang-button').forEach(btn => btn.addEventListener('click', e => setLanguage(e.target.dataset.lang)));
+        DOM.themeToggle.addEventListener('click', toggleTheme);
+        [DOM.wasteFactorInput, DOM.costYardInput, DOM.costPaverInput, DOM.costRebarInput].forEach(input => input.addEventListener('input', handleSettingsChange));
+    }
+
+    function showView(viewId) {
+        if (!viewId || !document.getElementById(viewId)) viewId = Object.keys(calculators)[0];
+        state.ui.activeView = viewId;
+        document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.toggle('active', btn.dataset.viewId === viewId));
+        setLanguage(state.lang);
+        saveState();
+    }
+    
+    function setLanguage(lang) {
+        state.lang = lang;
+        saveState();
+        const dict = { ...translations.en, ...(translations[lang] || {}) };
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.dataset.translateKey;
+            if (dict[key]) el.textContent = dict[key];
+        });
+        document.querySelectorAll('.lang-button').forEach(btn => btn.classList.toggle('selected', btn.dataset.lang === lang));
+    }
+
+    function applyTheme() { document.documentElement.classList.toggle('dark-mode', state.ui.isDark); }
+    function toggleTheme() { state.ui.isDark = !state.ui.isDark; applyTheme(); saveState(); }
+    
+    function updateSettingsUI() {
+        DOM.wasteFactorInput.value = state.settings.waste;
+        DOM.costYardInput.value = state.settings.costYard;
+        DOM.costPaverInput.value = state.settings.costPaver;
+        DOM.costRebarInput.value = state.settings.costRebar;
+    }
+
+ function handleCalculate(view, config, id) {
+    const t = (key) => (translations[state.lang] || translations.en)[key];
+    const quantities = config.calculate(view);
+    if (!quantities || quantities.error || Object.values(quantities).some(v => isNaN(v) || v <= 0)) {
+        view.querySelector('.error-message').textContent = t('error_invalid_input'); return;
+    }
+    view.querySelector('.error-message').textContent = '';
+    const { cost, finalDescription } = calculateItemCost(config.type, quantities);
+    const inputDescription = getInputDescription(view, config);
+    state.latestCalcResults[id] = { type: config.type, quantities, name: t(config.titleKey), inputDescription };
+    const resultsContainer = view.querySelector('.results-container');
+    resultsContainer.innerHTML = `<h3 data-translate-key="item_results_title">Item Totals</h3>
+        <div class="result-item">
+            <div style="text-align:center; margin-bottom: 5px;">
+                <strong>${t(config.titleKey)} (${inputDescription})</strong>
+            </div>
+            <div style="text-align:center; margin-bottom: 10px;">
+                <span class="price" style="font-size: 2em; font-weight: bold;">$${cost.toFixed(2)}</span> — ${finalDescription}
             </div>
         </div>
-    `);
+        <div class="item-name-group" style="display: none;"><input type="text" class="item-name-input" value="${t(config.titleKey)}" placeholder="${t('item_name')}"></div>
+        <button class="action-button add-to-project-button" data-translate-key="add_to_project"></button>`;
+    resultsContainer.style.display = 'block';
+    resultsContainer.querySelector('.add-to-project-button')?.addEventListener('click', () => handleAddToEstimate(view, id));
+    setLanguage(state.lang);
+}
+    function getInputDescription(view, config) {
+        return config.inputs.map(inputConf => {
+            if (inputConf.type === 'ft-in') {
+                const ft = view.querySelector(`[name="${inputConf.name}-ft"]`).value || '0';
+                const inch = view.querySelector(`[name="${inputConf.name}-in"]`).value || '0';
+                let part = '';
+                if(parseFloat(ft) > 0) part += `${ft}'`;
+                if(parseFloat(inch) > 0) part += ` ${inch}"`;
+                return part.trim();
+            } else {
+                const val = getVal(view, inputConf.name);
+                return val > 0 ? `${val}${inputConf.type === 'num' ? '' : '"'}` : '';
+            }
+        }).filter(p => p).join(' x ');
+    }
     
-    // Send email request
-    fetch('{{ route("patients.email-prescriptions", $patient->autoID) }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({})
-    })
-    .then(response => response.json())
-    .then(data => {
-        $('#loadingOverlay').remove();
-        if (data.success) {
-            alert('Prescriptions sent successfully to {{ $patient->Email }}');
-        } else {
-            alert('Error sending email: ' + data.message);
+    function calculateItemCost(type, quantities) {
+        const waste = 1 + (state.settings.waste / 100);
+        let cost = 0, finalDescription = '';
+        if(type === 'concrete') {
+            const volYd = (quantities.volFt3 / CUBIC_FEET_IN_YARD) * waste;
+            cost = volYd * state.settings.costYard;
+            finalDescription = `${volYd.toFixed(2)} yd³ Concrete`;
+        } else if (type === 'paver') {
+            const pavers = Math.ceil(quantities.numPavers * waste);
+            const base = (quantities.baseVolFt3 / CUBIC_FEET_IN_YARD) * waste;
+            cost = (pavers * state.settings.costPaver) + (base * state.settings.costYard);
+            finalDescription = `${pavers} Pavers, ${base.toFixed(2)} yd³ Base`;
+        } else if (type === 'rebar') {
+            const rebars = Math.ceil(quantities.numRebars * waste);
+            cost = rebars * state.settings.costRebar;
+            finalDescription = `${rebars} x 10ft Rebar`;
         }
-    })
-    .catch(error => {
-        $('#loadingOverlay').remove();
-        alert('Error sending email: ' + error.message);
-    });
-}
+        return { cost, finalDescription };
+    }
 
-function printReorderEG() {
-    window.open('{{ route("patients.print-reorder-eg", $patient->autoID) }}', '_blank');
-}
+    function handleAddToEstimate(view, id) {
+        if (!state.latestCalcResults[id]) return;
+        const nameInput = view.querySelector('.item-name-input');
+        const itemName = nameInput?.value.trim() !== '' ? nameInput.value.trim() : state.latestCalcResults[id].name;
+        state.projectItems.push({ id: Date.now(), ...state.latestCalcResults[id], name: itemName });
+        delete state.latestCalcResults[id];
+        view.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => { if(!input.classList.contains('item-name-input')) input.value = ''; });
+        view.querySelector('.results-container').style.display = 'none';
+        state.ui.isEstimateDirty = false;
+        renderProjectEstimate();
+        saveState();
+    }
+    
+    function handleSettingsChange() {
+        state.settings.waste = parseFloat(DOM.wasteFactorInput.value) || 0;
+        state.settings.costYard = parseFloat(DOM.costYardInput.value) || 0;
+        state.settings.costPaver = parseFloat(DOM.costPaverInput.value) || 0;
+        state.settings.costRebar = parseFloat(DOM.costRebarInput.value) || 0;
+        markEstimateAsDirty();
+        saveState();
+    }
 
-function printReorderCL() {
-    window.open('{{ route("patients.print-reorder-cl", $patient->autoID) }}', '_blank');
-}
+    function handleAdditionalCostChange() {
+        const container = DOM.projectEstimateContainer;
+        state.additionalCosts.labor = parseFloat(container.querySelector('input[name="labor"]').value) || 0;
+        state.additionalCosts.permits = parseFloat(container.querySelector('input[name="permits"]').value) || 0;
+        state.additionalCosts.misc = parseFloat(container.querySelector('input[name="misc"]').value) || 0;
+        markEstimateAsDirty();
+        saveState();
+    }
+    
+    function markEstimateAsDirty() {
+        if (isInitialLoad) return;
+        if (state.projectItems.length > 0 || Object.values(state.additionalCosts).some(c => c > 0)) {
+            if (!state.ui.isEstimateDirty) {
+                state.ui.isEstimateDirty = true;
+                renderProjectEstimate();
+            }
+        }
+    }
+    
+    function recalculateProjectCosts() {
+        state.ui.isEstimateDirty = false;
+        renderProjectEstimate();
+        saveState();
+    }
 
-function printBlankForm() {
-    window.open('{{ route("patients.print-blank-form", $patient->autoID) }}', '_blank');
-}
+    function renderProjectEstimate() {
+        let content = `<div id="project-estimate"><h2 data-translate-key="project_title"></h2><ul>`;
+        if (state.projectItems.length === 0) {
+            content += `<li data-translate-key="project_empty"></li>`;
+        } else {
+            state.projectItems.forEach(item => {
+                const { cost, finalDescription } = calculateItemCost(item.type, item.quantities);
+                content += `<li><div class="project-item-details"><span class="project-item-name">${item.name} (${item.inputDescription})</span></div><div class="project-item-cost"><span class="price">$${cost.toFixed(2)}</span> — <span class="project-item-desc">${finalDescription}</span></div><button class="remove-item-btn no-print" data-id="${item.id}">×</button></li>`;
+            });
+        }
+        content += `</ul></div>`;
+        
+        content += `<div id="additional-costs">
+            <div class="form-row"><span data-translate-key="labor"></span><div class="input-group"><span class="unit">$</span><input type="number" name="labor" class="additional-cost-input" value="${state.additionalCosts.labor || ''}" min="0" step="any"></div></div>
+            <div class="form-row"><span data-translate-key="permits"></span><div class="input-group"><span class="unit">$</span><input type="number" name="permits" class="additional-cost-input" value="${state.additionalCosts.permits || ''}" min="0" step="any"></div></div>
+            <div class="form-row"><span data-translate-key="misc"></span><div class="input-group"><span class="unit">$</span><input type="number" name="misc" class="additional-cost-input" value="${state.additionalCosts.misc || ''}" min="0" step="any"></div></div>
+        </div>`;
+
+        const materialsSubtotal = state.projectItems.reduce((acc, item) => acc + calculateItemCost(item.type, item.quantities).cost, 0);
+        const { labor, permits, misc } = state.additionalCosts;
+        const grandTotal = materialsSubtotal + labor + permits + misc;
+
+        content += `<div id="grand-total-section"><h3 data-translate-key="grand_total_title"></h3>
+            <div class="grand-total-row"><span data-translate-key="materials_subtotal"></span><span>$${materialsSubtotal.toFixed(2)}</span></div>
+            <div class="grand-total-row"><span data-translate-key="labor"></span><span>$${labor.toFixed(2)}</span></div>
+            <div class="grand-total-row"><span data-translate-key="permits"></span><span>$${permits.toFixed(2)}</span></div>
+            <div class="grand-total-row"><span data-translate-key="misc"></span><span>$${misc.toFixed(2)}</span></div>
+            <div class="grand-total-row final"><span data-translate-key="grand_total"></span><span>$${grandTotal.toFixed(2)}</span></div>
+        </div>`;
+        
+        if (state.ui.isEstimateDirty) {
+            content += `<div id="recalculate-prompt" style="display: block;"><p data-translate-key="recalculate_prompt"></p><button id="recalculate-btn" class="action-button recalculate-button" data-translate-key="recalculate_button"></button></div>`;
+        }
+
+        content += `<div class="project-actions no-print">
+            <button id="copy-project-btn" class="action-button copy-button" data-translate-key="copy_button"></button>
+            <button id="print-project-btn" class="action-button print-button" data-translate-key="print_button"></button>
+            <button id="clear-project-btn" class="action-button" style="background-color: var(--danger-color);" data-translate-key="clear_button"></button>
+        </div>`;
+        
+        DOM.projectEstimateContainer.innerHTML = content;
+        
+        DOM.projectEstimateContainer.querySelectorAll('.additional-cost-input').forEach(i => i.addEventListener('input', handleAdditionalCostChange));
+        DOM.projectEstimateContainer.querySelector('#recalculate-btn')?.addEventListener('click', recalculateProjectCosts);
+        DOM.projectEstimateContainer.querySelector('#clear-project-btn')?.addEventListener('click', clearProject);
+        DOM.projectEstimateContainer.querySelector('#print-project-btn')?.addEventListener('click', () => window.print());
+        DOM.projectEstimateContainer.querySelector('#copy-project-btn')?.addEventListener('click', handleCopyProject);
+        DOM.projectEstimateContainer.querySelectorAll('.remove-item-btn').forEach(btn => btn.addEventListener('click', e => {
+            state.projectItems = state.projectItems.filter(i => i.id !== parseInt(e.target.dataset.id));
+            state.ui.isEstimateDirty = false;
+            renderProjectEstimate();
+            saveState();
+        }));
+
+        setLanguage(state.lang);
+    }
+    
+    function clearProject() { 
+        if (confirm('Are you sure you want to clear the entire estimate? This cannot be undone.')) {
+            state.projectItems = [];
+            state.additionalCosts = { labor: 0, permits: 0, misc: 0 };
+            state.ui.isEstimateDirty = false;
+            renderProjectEstimate(); 
+            saveState();
+        }
+    }
+    
+    function handleCopyProject(e) {
+        const btn = e.target;
+        const t = (key) => (translations[state.lang] || translations.en)[key];
+        let text = `${t('project_title')}\n========================\n\n`;
+        if (state.ui.isEstimateDirty) { text += `${t('recalculate_prompt')}\n\n`; }
+        
+        let materialsSubtotal = 0;
+        state.projectItems.forEach(item => {
+            const { cost, finalDescription } = calculateItemCost(item.type, item.quantities);
+            text += `• ${item.name} (${item.inputDescription})\n  $${cost.toFixed(2)} — ${finalDescription}\n\n`;
+            materialsSubtotal += cost;
+        });
+        
+        const { labor, permits, misc } = state.additionalCosts;
+        const grandTotal = materialsSubtotal + labor + permits + misc;
+        text += `--- ${t('grand_total_title')} ---\n`;
+        text += `${t('materials_subtotal')}: $${materialsSubtotal.toFixed(2)}\n`;
+        text += `${t('labor')}: $${labor.toFixed(2)}\n`;
+        text += `${t('permits')}: $${permits.toFixed(2)}\n`;
+        text += `${t('misc')}: $${misc.toFixed(2)}\n`;
+        text += `------------------------\n${t('grand_total')}: $${grandTotal.toFixed(2)}\n`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = btn.textContent;
+            btn.textContent = t('copied_button');
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
+        });
+    }
+    
+    const getVal = (v, n) => {
+        const ft_in = v.querySelector(`[name="${n}-ft"]`);
+        if (ft_in) {
+            const ft = parseFloat(v.querySelector(`[name="${n}-ft"]`).value) || 0;
+            const inch = parseFloat(v.querySelector(`[name="${n}-in"]`).value) || 0;
+            return ft + (inch / 12);
+        }
+        return parseFloat(v.querySelector(`[name="${n}"]`).value) || 0;
+    };
+    
+    initializeApp();
+});
 </script>
-@endpush
+</body>
+</html>
